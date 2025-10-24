@@ -42,11 +42,7 @@
       "launchBrowser": false,
       "publishAllPorts": true,
       "useSSL": false,
-      "httpPort": 8080,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HTTP_PORTS": "8080"
-      }
+      "httpPort": 8080
     }
   }
 }

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace FinTrack.Model.DTO
 {
     public class HttpResponseErrorDTO
@@ -16,11 +11,11 @@ namespace FinTrack.Model.DTO
 
         }
 
-        public HttpResponseErrorDTO(HttpResponseException ex)
-        {
-            StatusCode = ex.StatusCode;
-            ErrorMessage = ex.ErrorMessage;
-            ErrorCode = ex.ErrorCode.ToString();
-        }
+        //public HttpResponseErrorDTO(HttpResponseException ex)
+        //{
+        //    StatusCode = ex.StatusCode;
+        //    ErrorMessage = ex.ErrorMessage;
+        //    ErrorCode = ex.ErrorCode.ToString();
+        //}
     }
 }

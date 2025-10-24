@@ -1,3 +1,6 @@
+using FinTrack.Database;
+using FinTrack.Database.Migrations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,15 +12,44 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<FintrackDbContext>(options =>
+{
+    _ = options.UseNpgsql(builder.Configuration.GetConnectionString("FintrackDb"));
+});
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+builder.Services.AddTransient<IStartupFilter, MigrationStartupFilter<FintrackDbContext>>();
+
 var app = builder.Build();
 
-// string basePath = "teste";
+string basePath = ""; // set to non-empty if your app is hosted under a path base
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline. Enable Swagger only in Development.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var prefix = string.IsNullOrEmpty(basePath) ? string.Empty : $"/{basePath}";
+
+    app.UseSwagger(c =>
+    {
+        c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+        {
+            var scheme = app.Environment.IsProduction() ? "https" : "http";
+            swaggerDoc.Servers = new List<OpenApiServer>
+            {
+                new OpenApiServer { Url = $"{scheme}://{httpReq.Host.Value}{prefix}" }
+            };
+        });
+
+        // RouteTemplate should not start with a leading slash
+        c.RouteTemplate = (string.IsNullOrEmpty(basePath) ? string.Empty : $"{basePath}/") + "swagger/{documentName}/swagger.json";
+    });
+
+    app.UseSwaggerUI(options =>
+    {
+        var endpoint = (string.IsNullOrEmpty(basePath) ? string.Empty : $"/{basePath}") + "/swagger/v1/swagger.json";
+        options.SwaggerEndpoint(endpoint, "FinTrack API V1");
+        // RoutePrefix must be relative (no leading '/').
+        options.RoutePrefix = string.IsNullOrEmpty(basePath) ? "swagger" : $"{basePath}/swagger";
+    });
 }
 
 app.UseAuthorization();
