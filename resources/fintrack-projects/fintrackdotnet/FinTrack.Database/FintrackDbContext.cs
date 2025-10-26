@@ -11,6 +11,12 @@ namespace FinTrack.Database
         public DbSet<Expense> Expenses { get; set; } = null!;
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; } = null!;
         public DbSet<Wallet> Wallets { get; set; } = null!;
+        public DbSet<Course> Courses { get; set; } = null!;
+        public DbSet<CourseCategory> CourseCategories { get; set; } = null!;
+        public DbSet<CourseLearningPlan> CourseLearningPlans { get; set; } = null!;
+        public DbSet<CourseLesson> CourseLessons { get; set; } = null!;
+        public DbSet<CourseTag> CourseTags { get; set; } = null!;
+        public DbSet<CourseTagAssignment> CourseTagAssignments { get; set; } = null!;
 
         static FintrackDbContext() { }
 

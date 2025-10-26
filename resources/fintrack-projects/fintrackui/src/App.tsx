@@ -40,13 +40,14 @@ import {
   CategoryShow,
 } from "./pages/categories";
 import { Login } from "./pages/login";
+import { CourseCategoryList } from "./pages/education/course-categories";
 
 function App() {
   let { keycloak, initialized } = useKeycloak();
 
-  if (!initialized) {
-    return <div>Loading...</div>;
-  }
+  // if (!initialized) {
+  //   return <div>Loading...</div>;
+  // }
 
   const authProvider: AuthProvider = {
     login: async () => {
@@ -131,10 +132,10 @@ function App() {
           <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
           <RefineSnackbarProvider>
             <Refine
-              dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+              dataProvider={dataProvider("http://localhost:5166/api")}
               notificationProvider={useNotificationProvider}
               routerProvider={routerProvider}
-              authProvider={authProvider}
+              // authProvider={authProvider}
               resources={[
                 {
                   name: "blog_posts",
@@ -147,11 +148,10 @@ function App() {
                   },
                 },
                 {
-                  name: "categories",
-                  list: "/categories",
-                  create: "/categories/create",
-                  edit: "/categories/edit/:id",
-                  show: "/categories/show/:id",
+                  name: "coursecategory",
+                  list: "/coursecategory",
+                  create: "/coursecategories/create",
+                  edit: "/coursecategories/edit/:id",
                   meta: {
                     canDelete: true,
                   },
@@ -161,6 +161,7 @@ function App() {
                 syncWithLocation: true,
                 warnWhenUnsavedChanges: true,
                 projectId: "DuwkOM-HmqS7d-G0Opfb",
+                title: { text: "FinTrack Project" }
               }}
             >
               <Routes>
@@ -170,7 +171,7 @@ function App() {
                       key="authenticated-inner"
                       fallback={<CatchAllNavigate to="/login" />}
                     >
-                      <ThemedLayout Header={Header}>
+                      <ThemedLayout Header={Header} >
                         <Outlet />
                       </ThemedLayout>
                     </Authenticated>
@@ -180,11 +181,8 @@ function App() {
                     index
                     element={<NavigateToResource resource="blog_posts" />}
                   />
-                  <Route path="/blog-posts">
-                    <Route index element={<BlogPostList />} />
-                    <Route path="create" element={<BlogPostCreate />} />
-                    <Route path="edit/:id" element={<BlogPostEdit />} />
-                    <Route path="show/:id" element={<BlogPostShow />} />
+                  <Route path="/coursecategory">
+                    <Route index element={<CourseCategoryList />} />
                   </Route>
                   <Route path="/categories">
                     <Route index element={<CategoryList />} />
