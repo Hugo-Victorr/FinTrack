@@ -1,45 +1,35 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
+import { ThemedTitle } from "@refinedev/antd";
 import { useLogin } from "@refinedev/core";
-import { ThemedTitle } from "@refinedev/mui";
+import { Button, Layout, Space, Typography } from "antd";
 
 export const Login: React.FC = () => {
   const { mutate: login } = useLogin();
 
   return (
-    <Container
+    <Layout
       style={{
         height: "100vh",
-        display: "flex",
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <Box
-        display="flex"
-        gap="36px"
-        justifyContent="center"
-        flexDirection="column"
-      >
+      <Space direction="vertical" align="center">
         <ThemedTitle
           collapsed={false}
           wrapperStyles={{
             fontSize: "22px",
-            justifyContent: "center",
+            marginBottom: "36px",
           }}
         />
-
         <Button
           style={{ width: "240px" }}
-          size="large"
-          variant="contained"
+          type="primary"
+          size="middle"
           onClick={() => login({})}
         >
           Sign in
         </Button>
-        <Typography align="center" color={"text.secondary"} fontSize="12px">
+        <Typography.Text type="secondary">
           Powered by
           <img
             style={{ padding: "0 5px" }}
@@ -47,8 +37,8 @@ export const Login: React.FC = () => {
             src="https://refine.ams3.cdn.digitaloceanspaces.com/superplate-auth-icons%2Fkeycloak.svg"
           />
           Keycloak
-        </Typography>
-      </Box>
-    </Container>
+        </Typography.Text>
+      </Space>
+    </Layout>
   );
 };

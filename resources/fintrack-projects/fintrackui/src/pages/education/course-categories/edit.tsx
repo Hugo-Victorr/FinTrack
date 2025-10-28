@@ -1,20 +1,23 @@
-import { Create, SaveButtonProps } from "@refinedev/antd";
+import { Create, Edit, SaveButtonProps } from "@refinedev/antd";
+import { BaseKey } from "@refinedev/core";
 import { Drawer, DrawerProps, Form, FormProps, Input } from "antd";
 
 interface CourseCategoryFormProps {
   drawerProps: DrawerProps;
   formProps: FormProps;
   saveButtonProps: SaveButtonProps;
+  id: BaseKey | undefined
 }
 
-export const CreateCourseCategory: React.FC<CourseCategoryFormProps> = ({
+export const EditCourseCategory: React.FC<CourseCategoryFormProps> = ({
   drawerProps,
   formProps,
-  saveButtonProps
+  saveButtonProps,
+  id
 }) => {
   return (
     <Drawer {...drawerProps}>
-      <Create saveButtonProps={saveButtonProps}>
+      <Edit saveButtonProps={saveButtonProps} recordItemId={id}>
         <Form {...formProps} layout="vertical">
           <Form.Item
             label="ID"
@@ -40,7 +43,7 @@ export const CreateCourseCategory: React.FC<CourseCategoryFormProps> = ({
             <Input />
           </Form.Item>
         </Form>
-      </Create>
+      </Edit>
     </Drawer>
   );
 };

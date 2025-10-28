@@ -1,78 +1,52 @@
+import { BaseRecord, HttpError } from "@refinedev/core";
 import React from "react";
-import { type HttpError, useMany } from "@refinedev/core";
-import { List, useDataGrid, DateField, ShowButton, EditButton, DeleteButton } from "@refinedev/mui";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Button, Stack } from "@mui/material";
-import { CreateCourseCategoryDrawer } from "./create";
-import { useModalForm } from "@refinedev/react-hook-form";
 
-export const CourseCategoryList = () => {
-    const { dataGridProps } = useDataGrid();
+import { Create, DeleteButton, EditButton, List, useDrawerForm, useTable } from "@refinedev/antd";
+import { Drawer, Form, Input, Select, Space, Table } from "antd";
+import { CreateCourseCategory } from "./create";
+import { EditCourseCategory } from "./edit";
 
-    const createDrawerFormProps = useModalForm <HttpError>(
-        {
-            refineCoreProps: { action: "create" },
-            syncWithLocation: true,
-        },
-    );
-    const {
-        modal: { show: showCreateDrawer },
-    } = createDrawerFormProps;
 
-    const columns = React.useMemo<GridColDef<any>[]>(
-        () => [
-            {
-                field: "id",
-                headerName: "Id",
-                type: "number",
-                minWidth: 50,
-            },
-            {
-                field: "name",
-                headerName: "Name",
-                minWidth: 200,
-            },
-            {
-                field: "description",
-                headerName: "description",
-                minWidth: 200,
-            },
-            {
-                field: "createdAt",
-                headerName: "Created At",
-                minWidth: 250,
-                display: "flex",
-                renderCell: function render({ value }) {
-                    return <DateField value={value} />;
-                },
-            },
-            {
-                    field: "actions",
-                    filterable: false,
-                    hideable: false,
-                    headerName: "Actions",
-                    align: "right",
-                    headerAlign: "right",
-                    minWidth: 120,
-                    sortable: false,
-                    display: "flex",
-                    renderCell: function render({ row }) {
-                      return (
-                        <>
-                          <EditButton hideText recordItemId={row.id} />
-                          <DeleteButton hideText recordItemId={row.id} />
-                        </>
-                      );
-                    },
-                  },
-        ], []
-    );
+export const CourseCategoryList: React.FC = () => {
+  const { tableProps } = useTable<HttpError>();
 
-    return (
-        <List createButtonProps={{ onClick: () => showCreateDrawer() }} >
-            <DataGrid {...dataGridProps} columns={columns} />
-            <CreateCourseCategoryDrawer {...createDrawerFormProps} />
-        </List>
-    );
+  const { formProps: createFormProps, drawerProps: createDrawerProps, show: createShow, saveButtonProps: createSaveButtonProps } = useDrawerForm<HttpError>({
+    action: "create",
+  });
+
+  const { formProps: editFormProps, drawerProps: editDrawerProps, show: editShow, saveButtonProps: editSaveButtonProps, id } = useDrawerForm<HttpError>({
+    action: "edit",
+  });
+
+  return (
+    <>
+      <List
+        canCreate
+        createButtonProps={{
+          onClick: () => {
+            createShow();
+          },
+        }}
+      >
+        <Table {...tableProps} rowKey="id">
+          <Table.Column dataIndex="name" title="Name" />
+          <Table.Column dataIndex="description" title="Description" />
+          <Table.Column dataIndex="createdAt" title="Created at" />
+          <Table.Column
+            title={"Actions"}
+            dataIndex="actions"
+            render={(_, record: BaseRecord) => (
+              <Space>
+                <EditButton hideText size="small" recordItemId={record.id} onClick={() => editShow(record.id)} />
+                <DeleteButton hideText size="small" recordItemId={record.id} />
+              </Space>
+            )}
+          />
+        </Table>
+      </List>
+      <CreateCourseCategory drawerProps={createDrawerProps} formProps={createFormProps} saveButtonProps={createSaveButtonProps} />
+      <EditCourseCategory drawerProps={editDrawerProps} formProps={editFormProps} saveButtonProps={editSaveButtonProps} id={id} />
+    </>
+  );
 };
 

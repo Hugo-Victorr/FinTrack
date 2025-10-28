@@ -1,25 +1,49 @@
-import { List, Tab, Tabs } from "@mui/material"
+import { DeleteButton, EditButton, List, ShowButton, useTable } from "@refinedev/antd";
+import { BaseRecord } from "@refinedev/core";
+import { Row, Space, Table, Tabs } from "antd";
 import { useState } from "react";
-import { VerticalTabPanel } from "../../../components/tabpanel/tabpanel";
 
-export const ListCourses = () => {
+export const ListCourse = () => {
+  const [activeKey, setActiveKey] = useState("1");
 
-    const [value, setValue] = useState(0);
+  const { tableProps } = useTable({
+    filters: {
+      permanent: [
+        activeKey === "1"
+          ? { field: "ownedByUser", operator: "eq", value: true }
+          : activeKey === "2"
+            ? { field: "available", operator: "eq", value: true }
+            : { field: "type", operator: "eq", value: "learningPlan" },
+      ],
+    },
+  });
 
-    const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-        setValue(newValue);
-    };
-
-    return (
-
-        <Tabs value={value} onChange={handleChange} orientation="vertical" centered>
-            <Tab label="Learning Plans" />
-            <Tab label="Available courses" />
-            <Tab label="My training" />
-            <List>
-                
-            </List>
+  return (
+    <List>
+      <Row>
+        <Tabs tabPosition="left" activeKey={activeKey} onChange={setActiveKey}>
+          <Tabs.TabPane key="1" tab="My courses" />
+          <Tabs.TabPane key="2" tab="Available courses" />
+          <Tabs.TabPane key="3" tab="Learning Plans" />
         </Tabs>
-    );
+        <Table {...tableProps} rowKey="id" style={{ flex: 1 }}>
+          <Table.Column dataIndex="title" title="Title" />
+          <Table.Column dataIndex="description" title="Description" />
+          <Table.Column dataIndex={["category", "name"]} title="Category" />
+          <Table.Column
+            title={"Actions"}
+            dataIndex="actions"
+            render={(_, record: BaseRecord) => (
+              <Space>
+                <ShowButton hideText size="small" recordItemId={record.id} />
+                <EditButton hideText size="small" recordItemId={record.id} />
+                <DeleteButton hideText size="small" recordItemId={record.id} />
+              </Space>
+            )}
+          />
+        </Table>
+      </Row>
+    </List>
+  );
 
 }

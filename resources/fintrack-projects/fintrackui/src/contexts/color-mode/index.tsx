@@ -1,7 +1,7 @@
-import { ThemeProvider } from "@mui/material/styles";
-import { RefineThemes } from "@refinedev/mui";
-import React, {
-  PropsWithChildren,
+import { RefineThemes } from "@refinedev/antd";
+import { ConfigProvider, theme } from "antd";
+import {
+  type PropsWithChildren,
   createContext,
   useEffect,
   useState,
@@ -9,7 +9,7 @@ import React, {
 
 type ColorModeContextType = {
   mode: string;
-  setMode: () => void;
+  setMode: (mode: string) => void;
 };
 
 export const ColorModeContext = createContext<ColorModeContextType>(
@@ -41,6 +41,8 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
     }
   };
 
+  const { darkAlgorithm, defaultAlgorithm } = theme;
+
   return (
     <ColorModeContext.Provider
       value={{
@@ -48,12 +50,15 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
         mode,
       }}
     >
-      <ThemeProvider
-        // you can change the theme colors here. example: mode === "light" ? RefineThemes.Magenta : RefineThemes.MagentaDark
-        theme={mode === "light" ? RefineThemes.Yellow : RefineThemes.YellowDark}
+      <ConfigProvider
+        // you can change the theme colors here. example: ...RefineThemes.Magenta,
+        theme={{
+          ...RefineThemes.Yellow,
+          algorithm: mode === "light" ? defaultAlgorithm : darkAlgorithm,
+        }}
       >
         {children}
-      </ThemeProvider>
+      </ConfigProvider>
     </ColorModeContext.Provider>
   );
 };

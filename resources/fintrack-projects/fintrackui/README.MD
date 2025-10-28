@@ -40,7 +40,7 @@ Refine's hooks and components simplifies the development process and eliminates 
 To learn more about **Refine**, please check out the [Documentation](https://refine.dev/docs)
 
 - **REST Data Provider** [Docs](https://refine.dev/docs/core/providers/data-provider/#overview)
-- **Material UI** [Docs](https://refine.dev/docs/ui-frameworks/mui/tutorial/)
+- **Ant Design** [Docs](https://refine.dev/docs/ui-frameworks/antd/tutorial/)
 - **React Router** [Docs](https://refine.dev/docs/core/providers/router-provider/)
 - **Keycloak Auth Providder** [Docs](https://refine.dev/docs/guides-and-concepts/auth/auth0/)
 

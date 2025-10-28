@@ -1,49 +1,38 @@
 import {
   Authenticated,
   AuthProvider,
-  Refine
+  Refine,
 } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import {
   ErrorComponent,
-  RefineSnackbarProvider,
   ThemedLayout,
+  ThemedSider,
   useNotificationProvider,
-} from "@refinedev/mui";
+} from "@refinedev/antd";
+import "@refinedev/antd/dist/reset.css";
 
-import CssBaseline from "@mui/material/CssBaseline";
-import GlobalStyles from "@mui/material/GlobalStyles";
-import { ReactKeycloakProvider, useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "@react-keycloak/web";
 import routerProvider, {
   CatchAllNavigate,
   DocumentTitleHandler,
   NavigateToResource,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import dataProvider from "@refinedev/simple-rest";
+import { dataProvider } from "./rest-data-provider";
+import { App as AntdApp } from "antd";
 import axios from "axios";
-import Keycloak from "keycloak-js";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
 import { ColorModeContextProvider } from "./contexts/color-mode";
-import {
-  BlogPostCreate,
-  BlogPostEdit,
-  BlogPostList,
-  BlogPostShow,
-} from "./pages/blog-posts";
-import {
-  CategoryCreate,
-  CategoryEdit,
-  CategoryList,
-  CategoryShow,
-} from "./pages/categories";
 import { Login } from "./pages/login";
 import { CourseCategoryList } from "./pages/education/course-categories";
+import { ListCourse, ShowCourse, WatchCourse } from "./pages/education/courses";
+import { FintrackLogo } from "./components/icons/fintrackLogo";
 
 function App() {
-  let { keycloak, initialized } = useKeycloak();
+  const { keycloak, initialized } = useKeycloak();
 
   // if (!initialized) {
   //   return <div>Loading...</div>;
@@ -128,9 +117,7 @@ function App() {
     <BrowserRouter>
       <RefineKbarProvider>
         <ColorModeContextProvider>
-          <CssBaseline />
-          <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
-          <RefineSnackbarProvider>
+          <AntdApp>
             <Refine
               dataProvider={dataProvider("http://localhost:5166/api")}
               notificationProvider={useNotificationProvider}
@@ -138,11 +125,11 @@ function App() {
               // authProvider={authProvider}
               resources={[
                 {
-                  name: "blog_posts",
-                  list: "/blog-posts",
-                  create: "/blog-posts/create",
-                  edit: "/blog-posts/edit/:id",
-                  show: "/blog-posts/show/:id",
+                  name: "course",
+                  list: "/course",
+                  show: "/course/show/:id",
+                  create: "/course/create",
+                  edit: "/course/edit/:id",
                   meta: {
                     canDelete: true,
                   },
@@ -150,8 +137,8 @@ function App() {
                 {
                   name: "coursecategory",
                   list: "/coursecategory",
-                  create: "/coursecategories/create",
-                  edit: "/coursecategories/edit/:id",
+                  create: "/coursecategory/create",
+                  edit: "/coursecategory/edit/:id",
                   meta: {
                     canDelete: true,
                   },
@@ -160,8 +147,13 @@ function App() {
               options={{
                 syncWithLocation: true,
                 warnWhenUnsavedChanges: true,
-                projectId: "DuwkOM-HmqS7d-G0Opfb",
-                title: { text: "FinTrack Project" }
+                projectId: "G9f8XF-O7GGK6-BspEWd",
+                disableTelemetry: true, 
+                
+                title: {
+                  icon: <FintrackLogo/>,
+                  text: "FinTrack Project"
+                }
               }}
             >
               <Routes>
@@ -171,24 +163,22 @@ function App() {
                       key="authenticated-inner"
                       fallback={<CatchAllNavigate to="/login" />}
                     >
-                      <ThemedLayout Header={Header} >
+                      <ThemedLayout
+                        Header={Header}
+                        Sider={(props) => <ThemedSider {...props} fixed />}
+                      >
                         <Outlet />
                       </ThemedLayout>
                     </Authenticated>
                   }
                 >
-                  <Route
-                    index
-                    element={<NavigateToResource resource="blog_posts" />}
-                  />
+                  <Route path="/course">
+                    <Route index element={<ListCourse />} />
+                    <Route path="show/:id" element={<ShowCourse />} />
+                    <Route path="watch/:id" element={<WatchCourse />} />
+                  </Route>
                   <Route path="/coursecategory">
                     <Route index element={<CourseCategoryList />} />
-                  </Route>
-                  <Route path="/categories">
-                    <Route index element={<CategoryList />} />
-                    <Route path="create" element={<CategoryCreate />} />
-                    <Route path="edit/:id" element={<CategoryEdit />} />
-                    <Route path="show/:id" element={<CategoryShow />} />
                   </Route>
                   <Route path="*" element={<ErrorComponent />} />
                 </Route>
@@ -205,12 +195,11 @@ function App() {
                   <Route path="/login" element={<Login />} />
                 </Route>
               </Routes>
-
               <RefineKbar />
               <UnsavedChangesNotifier />
               <DocumentTitleHandler />
             </Refine>
-          </RefineSnackbarProvider>
+          </AntdApp>
         </ColorModeContextProvider>
       </RefineKbarProvider>
     </BrowserRouter>
