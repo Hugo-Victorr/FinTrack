@@ -15,6 +15,7 @@ namespace FinTrack.Database
         public DbSet<CourseCategory> CourseCategories { get; set; } = null!;
         public DbSet<CourseLearningPlan> CourseLearningPlans { get; set; } = null!;
         public DbSet<CourseLesson> CourseLessons { get; set; } = null!;
+        public DbSet<CourseModule> CourseModules { get; set; } = null!;
         public DbSet<CourseTag> CourseTags { get; set; } = null!;
         public DbSet<CourseTagAssignment> CourseTagAssignments { get; set; } = null!;
 

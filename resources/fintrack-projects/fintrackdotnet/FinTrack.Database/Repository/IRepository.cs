@@ -24,7 +24,7 @@ namespace FinTrack.Database.Repository
         /// </summary>
         /// <param name="key">Primary key</param>
         /// <returns>Entity</returns>
-        Task<TEntity?> FindAsync(object key, bool track = false);
+        Task<TEntity?> FindAsync(object key, bool track = false, params Expression<Func<TEntity, object>>[] includes);
 
         /// <summary>
         /// Insert one or many entities async

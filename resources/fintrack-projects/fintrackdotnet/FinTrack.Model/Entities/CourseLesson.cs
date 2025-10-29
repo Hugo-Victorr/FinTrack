@@ -8,6 +8,6 @@ public class CourseLesson : BaseEntity
     public int Order { get; set; }
     public TimeSpan Duration { get; set; }
 
-    public Guid CourseId { get; set; }
-    public Course Course { get; set; } = null!;
+    public Guid ModuleId { get; set; }
+    public CourseModule Module { get; set; } = null!;
 }

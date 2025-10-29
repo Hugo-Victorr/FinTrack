@@ -12,11 +12,11 @@ public class CourseLearningPlanRepository : BaseDao<CourseLearningPlan>, ICourse
 
     protected override Task ValidateEntityForInsert(params CourseLearningPlan[] obj)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     protected override Task ValidateEntityForUpdate(params CourseLearningPlan[] obj)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 }

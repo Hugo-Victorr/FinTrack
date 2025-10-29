@@ -12,11 +12,11 @@ public class CourseTagRepository : BaseDao<CourseTag>, ICourseTagRepository
 
     protected override Task ValidateEntityForInsert(params CourseTag[] obj)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     protected override Task ValidateEntityForUpdate(params CourseTag[] obj)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 }

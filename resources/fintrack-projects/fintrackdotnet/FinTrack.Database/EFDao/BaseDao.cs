@@ -160,7 +160,10 @@ namespace FinTrack.Database.EFDao
             return result;
         }
 
-        public virtual async Task<TEntity?> FindAsync(object key, bool track = false)
+        public virtual async Task<TEntity?> FindAsync(
+            object key,
+            bool track = false,
+            params Expression<Func<TEntity, object>>[] includes)
         {
             TEntity? entity = null;
 
@@ -176,14 +179,19 @@ namespace FinTrack.Database.EFDao
                 await dbSet.FindAsync(key) :
                 await dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.Id.Equals(key));
 
-            if (entity != null && entity.DeletedAt == null)
+            IQueryable<TEntity> query = dbSet.Where(e => e.DeletedAt == null);
+
+            foreach (var include in includes)
             {
-                //if (!track)
-                //    _cache?.AddEntity(entity);
-                return entity;
+                query = query.Include(include);
             }
 
-            return null;
+            if (!track)
+                query = query.AsNoTracking();
+
+            entity = await query.FirstOrDefaultAsync(e => e.Id.Equals(key));
+
+            return entity;
         }
 
         public async Task<int> RestoreAsync(params TEntity[] obj)

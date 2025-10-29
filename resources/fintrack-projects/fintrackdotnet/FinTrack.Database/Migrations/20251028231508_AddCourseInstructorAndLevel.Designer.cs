@@ -3,6 +3,7 @@ using System;
 using FinTrack.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrack.Database.Migrations
 {
     [DbContext(typeof(FintrackDbContext))]
-    partial class FintrackDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251028231508_AddCourseInstructorAndLevel")]
+    partial class AddCourseInstructorAndLevel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,9 +32,6 @@ namespace FinTrack.Database.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Aims")
-                        .HasColumnType("text");
 
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
@@ -53,9 +53,6 @@ namespace FinTrack.Database.Migrations
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
-
-                    b.Property<int>("LessonsLength")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -160,6 +157,9 @@ namespace FinTrack.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -171,9 +171,6 @@ namespace FinTrack.Database.Migrations
 
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("interval");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("uuid");
 
                     b.Property<int>("Order")
                         .HasColumnType("integer");
@@ -193,44 +190,9 @@ namespace FinTrack.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ModuleId");
-
-                    b.ToTable("CourseLessons");
-                });
-
-            modelBuilder.Entity("FinTrack.Model.Entities.CourseModule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("User")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
                     b.HasIndex("CourseId");
 
-                    b.ToTable("CourseModules");
+                    b.ToTable("CourseLessons");
                 });
 
             modelBuilder.Entity("FinTrack.Model.Entities.CourseTag", b =>
@@ -490,19 +452,8 @@ namespace FinTrack.Database.Migrations
 
             modelBuilder.Entity("FinTrack.Model.Entities.CourseLesson", b =>
                 {
-                    b.HasOne("FinTrack.Model.Entities.CourseModule", "Module")
-                        .WithMany("Lessons")
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Module");
-                });
-
-            modelBuilder.Entity("FinTrack.Model.Entities.CourseModule", b =>
-                {
                     b.HasOne("FinTrack.Model.Entities.Course", "Course")
-                        .WithMany("Modules")
+                        .WithMany("Lessons")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -544,7 +495,7 @@ namespace FinTrack.Database.Migrations
                 {
                     b.Navigation("LearningPlans");
 
-                    b.Navigation("Modules");
+                    b.Navigation("Lessons");
 
                     b.Navigation("Tags");
                 });
@@ -552,11 +503,6 @@ namespace FinTrack.Database.Migrations
             modelBuilder.Entity("FinTrack.Model.Entities.CourseCategory", b =>
                 {
                     b.Navigation("Courses");
-                });
-
-            modelBuilder.Entity("FinTrack.Model.Entities.CourseModule", b =>
-                {
-                    b.Navigation("Lessons");
                 });
 
             modelBuilder.Entity("FinTrack.Model.Entities.CourseTag", b =>

@@ -11,20 +11,6 @@ public class CourseCategoryRepository : BaseDao<CourseCategory>, ICourseCategory
     {
     }
 
-    public async Task<IEnumerable<CourseCategory>> GetPagedAsync(int skip, int take, string? search)
-    {
-        var query = _context.CourseCategories.AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(c => c.Name.Contains(search));
-
-        return await query
-            .OrderByDescending(c => c.CreatedAt)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync();
-    }
-
     protected override Task ValidateEntityForInsert(params CourseCategory[] obj)
     {
         return Task.CompletedTask;

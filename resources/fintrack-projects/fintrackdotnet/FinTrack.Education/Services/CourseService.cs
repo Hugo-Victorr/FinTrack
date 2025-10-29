@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using FinTrack.Database.EFDao;
 using FinTrack.Database.Interfaces;
@@ -6,50 +7,106 @@ using FinTrack.Model.Entities;
 
 namespace FinTrack.Education.Services;
 
-public class CourseService(ICourseRepository repository, IMapper mapper)
+public class CourseService
 {
+    private readonly ICourseRepository _courseRepository;
+    private readonly ICourseModuleRepository _courseModuleRepository;
+    private readonly IMapper _mapper;
+
+    public CourseService(ICourseRepository repository, IMapper mapper, ICourseModuleRepository courseModuleRepository)
+    {
+        _courseRepository = repository;
+        _mapper = mapper;
+        _courseModuleRepository = courseModuleRepository;
+    }
+
     public async Task<IEnumerable<CourseDto>> GetAllAsync(QueryOptions opts)
     {
-        var entities = await repository.AllAsync(
+        var entities = await _courseRepository.AllAsync(
             opts,
             false,
             c => c.Category
         );
-        return mapper.Map<IEnumerable<CourseDto>>(entities);
+        return _mapper.Map<IEnumerable<CourseDto>>(entities);
     }
 
-    public async Task<CourseDto?> GetByIdAsync(Guid id)
+    public async Task<CourseDetailsDto?> GetByIdAsync(Guid id, bool includeLessons = false)
     {
-        var entity = await repository.FindAsync(id);
-        return entity is null ? null : mapper.Map<CourseDto>(entity);
+        Course? entity;
+        
+        if (includeLessons)
+            entity = await _courseRepository.GetCourseComplete(id);
+        else
+            entity = await _courseRepository.FindAsync(id, false, c=>c.Category);
+
+        if (entity is null)
+            return null;
+
+        CourseDetailsDto? res = _mapper.Map<CourseDetailsDto>(entity);
+
+        if (includeLessons)
+            res.CourseContent = GetLessonsDto(entity);
+
+        return res;
     }
 
     public async Task<CourseDto> CreateAsync(CourseCreateDto dto)
     {
-        var entity = mapper.Map<Course>(dto);
-        await repository.AddAsync(entity);
+        var entity = _mapper.Map<Course>(dto);
+        await _courseRepository.AddAsync(entity);
         // await unitOfWork.CommitAsync();
-        return mapper.Map<CourseDto>(entity);
+        return _mapper.Map<CourseDto>(entity);
+    }
+
+    public async Task<bool> AddModuleAsync(CourseModuleCreateDto dto)
+    {
+        var course = await _courseRepository.FindAsync(dto.CourseId);
+        if (course is null)
+            return false;
+
+        var module = _mapper.Map<CourseModule>(dto);
+        await _courseModuleRepository.AddAsync(module);
+
+        return true;
     }
 
     public async Task<CourseDto?> UpdateAsync(Guid id, CourseUpdateDto dto)
     {
-        var entity = await repository.FindAsync(id);
+        var entity = await _courseRepository.FindAsync(id);
         if (entity is null) return null;
 
-        mapper.Map(dto, entity);
-        await repository.UpdateAsync(entity);
+        _mapper.Map(dto, entity);
+        await _courseRepository.UpdateAsync(entity);
         // await unitOfWork.CommitAsync();
-        return mapper.Map<CourseDto>(entity);
+        return _mapper.Map<CourseDto>(entity);
     }
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var entity = await repository.FindAsync(id);
+        var entity = await _courseRepository.FindAsync(id);
         if (entity is null) return false;
 
-        await repository.DeleteAsync(id);
+        await _courseRepository.DeleteAsync(id);
         // await unitOfWork.CommitAsync();
         return true;
+    }
+
+    private List<CourseContentDto> GetLessonsDto(Course course)
+    {
+        List<CourseContentDto> res = [];
+
+        foreach (CourseModule module in course.Modules)
+        {
+            CourseContentDto mod = new CourseContentDto(module.Name, module.OrderIndex);
+
+            foreach (CourseLesson lesson in module.Lessons)
+            {
+                mod.AddLessonToModule(lesson.Title, lesson.Order, lesson.VideoUrl!);
+            }
+
+            res.Add(mod);
+        }
+
+        return res;
     }
 }

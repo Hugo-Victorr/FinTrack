@@ -1,127 +1,131 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, Row, Col, Button, Typography, Descriptions, Progress, Space } from "antd";
 import { PlayCircleOutlined, ArrowRightOutlined } from "@ant-design/icons";
-import { useOne, useShow } from "@refinedev/core";
-// import { useNavigate } from "react-router-dom";
+import { useGo, useOne, useParsed, useShow } from "@refinedev/core";
+import { ListButton, Show } from "@refinedev/antd";
+import { CourseLevel } from "../../../components/course/levelTag";
+import { ICourse } from "./types";
 
 const { Title, Paragraph } = Typography;
 
-const course = {
-  id: "java-backend",
-  title: "Advanced Java Backend Development",
-  thumbnail:
-    "https://images.unsplash.com/photo-1553484771-371a605b060b?auto=format&fit=crop&w=1000&q=80",
-  description:
-    "Learn how to build scalable backends using Spring Boot, Kafka, and Redis. This course covers design patterns, event-driven architectures, and distributed systems best practices.",
-  instructor: "Luiz Silva",
-  duration: "8h 25m",
-  level: "Intermediate",
-  lessons: [
-    {
-      title: "Introduction",
-      key: "0",
-      children: [
-        { title: "Welcome to the course", key: "0-0" },
-        { title: "Setting up your environment", key: "0-1" },
-      ],
-    },
-    {
-      title: "Core Concepts",
-      key: "1",
-      children: [
-        { title: "Dependency Injection", key: "1-0" },
-        { title: "RESTful APIs", key: "1-1" },
-      ],
-    },
-  ],
-};
 
 const flattenLessons = (sections: any[]) =>
   sections.flatMap(section => section.children.map((l: any) => ({ ...l, section: section.title })));
 
+function formatDuration(minutes: number | undefined): string {
+  if (!minutes) {
+    return "";
+  }
+  
+  if (minutes < 0 || isNaN(minutes)) return "0m";
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours === 0) return `${mins}m`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+}
+
+
 export const ShowCourse: React.FC = () => {
   // const navigate = useNavigate();
-  const lessons = useMemo(() => flattenLessons(course.lessons), []);
-
-  const { query } = useShow({});
-
-  const { data, isLoading } = query;
-
-  const record = data?.data;
-
+  const { query: queryResult } = useShow<ICourse>();
+  const { isLoading, data } = queryResult;
+  const course = data?.data;
+  
+  const go = useGo();
   const {
-    result: category,
-    query: { isLoading: categoryIsLoading },
-  } = useOne({
-    resource: "categories",
-    id: record?.category?.id || "",
-    queryOptions: {
-      enabled: !!record,
-    },
-  });
+    resource,
+    pathname,
+    id,
+  } = useParsed();
+
+  // const lessons = useMemo(() => flattenLessons(course.lessons), []);
 
   // Retrieve progress data from localStorage
-  const completed = JSON.parse(localStorage.getItem(`completed_${course.id}`) || "[]");
-  const progress = Math.round((completed.length / lessons.length) * 100);
-  const hasProgress = progress > 0;
-  const lastLessonKey = localStorage.getItem(`lastLesson_${course.id}`);
+  // const completed = JSON.parse(localStorage.getItem(`completed_${course.id}`) || "[]");
+  // const progress = 0; //Math.round((completed.length / lessons.length) * 100);
+  // const hasProgress = progress > 0;
+  // const lastLessonKey = localStorage.getItem(`lastLesson_${course.id}`);
 
   const handleStartOrContinue = () => {
-    // navigate(`/courses/${course.id}/watch`);
+    go({
+      to: `/${resource!.name}/watch/${id}`,
+      type: "push",
+    });
   };
 
+
   return (
-    <div style={{ padding: 24 }}>
-      <Row gutter={[32, 32]} align="middle">
-        {/* Left side: Thumbnail */}
-        <Col xs={24} md={10}>
-          <Card
-            cover={<img alt={course.title}
-              src={course.thumbnail}
-              style={{ objectFit: "cover" }} />}
-          />
-        </Col>
+    <Show 
+      headerButtons={({
+        listButtonProps,
+      }) => (<>{listButtonProps && (<ListButton type="primary" {...listButtonProps} />)}</>)}
+      resource="course" 
+      isLoading={isLoading} 
+      title={course?.title} 
+      breadcrumb={null}>
 
-        {/* Right side: Details */}
-        <Col xs={24} md={14}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <Title level={2}>{course.title}</Title>
-            <Paragraph>{course.description}</Paragraph>
+      <div style={{ padding: 24 }}>
 
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Instructor">{course.instructor}</Descriptions.Item>
-              <Descriptions.Item label="Level">{course.level}</Descriptions.Item>
-              <Descriptions.Item label="Duration">{course.duration}</Descriptions.Item>
-              <Descriptions.Item label="Lessons">{lessons.length}</Descriptions.Item>
-            </Descriptions>
+        <Row gutter={[32, 32]} align="middle">
 
-            {hasProgress && (
-              <Progress
-                percent={progress}
-                status={progress === 100 ? "success" : "active"}
-                size="default"
-              />
-            )}
+          <Col xs={24} md={10}>
+            <Card
+              cover={<img alt={course?.title}
+                src={course?.thumbnailUrl}
+                style={{ objectFit: "cover" }} />}
+            />
+          </Col>
 
-            <Button
-              type="primary"
-              size="large"
-              icon={hasProgress ? <ArrowRightOutlined /> : <PlayCircleOutlined />}
-              onClick={handleStartOrContinue}
-            >
-              {hasProgress
-                ? `Continue ${progress === 100 ? "Reviewing" : "Watching"}`
-                : "Start Course"}
-            </Button>
+          <Col xs={24} md={14}>
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <Title level={2}>{course?.title}</Title>
+              <Paragraph>{course?.description}</Paragraph>
 
-            {lastLessonKey && (
-              <Paragraph type="secondary" style={{ marginTop: 8 }}>
-                Last lesson watched: <b>{lessons.find(l => l.key === lastLessonKey)?.title}</b>
-              </Paragraph>
-            )}
-          </Space>
-        </Col>
-      </Row>
-    </div>
+              <Descriptions column={1} bordered size="small">
+                {
+                  course?.aims && (<Descriptions.Item label="Aims">{course?.aims}</Descriptions.Item>)
+                }
+                <Descriptions.Item label="Instructor">{course?.instructor}</Descriptions.Item>
+                <Descriptions.Item label="Category">{course?.category.name}</Descriptions.Item>
+                <Descriptions.Item label="Level">
+                  <CourseLevel level={course?.level} />
+                </Descriptions.Item>
+                <Descriptions.Item label="Duration">{formatDuration(course?.durationMinutes)}</Descriptions.Item>
+                <Descriptions.Item label="Lessons">{0}</Descriptions.Item>
+              </Descriptions>
+
+              {/* {hasProgress && (
+                <Progress
+                  percent={progress}
+                  status={progress === 100 ? "success" : "active"}
+                  size="default"
+                />
+              )} */}
+
+              <Button
+                type="primary"
+                size="large"
+                // icon={hasProgress ? <ArrowRightOutlined /> : <PlayCircleOutlined />}
+                onClick={handleStartOrContinue}
+              >
+                {/* {hasProgress
+                  ? `Continue ${progress === 100 ? "Reviewing" : "Watching"}`
+                  : "Start Course"} */}
+                Start Course
+              </Button>
+
+              {/* {lastLessonKey && (
+                <Paragraph type="secondary" style={{ marginTop: 8 }}>
+                  Last lesson watched: <b>{lessons.find(l => l.key === lastLessonKey)?.title}</b>
+                </Paragraph>
+              )} */}
+            </Space>
+          </Col>
+        </Row>
+      </div>
+    </Show>
   );
 };

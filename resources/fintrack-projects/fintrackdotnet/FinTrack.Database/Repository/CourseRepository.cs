@@ -12,18 +12,15 @@ public class CourseRepository : BaseDao<Course>, ICourseRepository
     {
     }
 
-    public async Task<IEnumerable<Course>> GetPagedAsync(int skip, int take, string? search)
+    public async Task<Course?> GetCourseComplete(Guid Id)
     {
-        var query = _context.Courses.AsQueryable();
+        var course = await _context.Courses
+            .Include(c => c.Category)
+            .Include(c => c.Modules)
+                .ThenInclude(m => m.Lessons)
+            .FirstOrDefaultAsync(c => c.Id == Id);
 
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(c => c.Title.Contains(search));
-
-        return await query
-            .OrderByDescending(c => c.CreatedAt)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync();
+        return course;
     }
 
     protected override Task ValidateEntityForInsert(params Course[] obj)

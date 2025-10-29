@@ -1,10 +1,9 @@
-
 using FinTrack.Database.Repository;
 using FinTrack.Model.Entities;
 
 namespace FinTrack.Database.Interfaces;
 
-public interface ICourseRepository : IRepository<Course>
+public interface ICourseModuleRepository : IRepository<CourseModule>
 {
-    Task<Course?> GetCourseComplete(Guid Id);
+
 }

@@ -1,6 +1,7 @@
+import { PlayCircleOutlined } from "@ant-design/icons";
 import { DeleteButton, EditButton, List, ShowButton, useTable } from "@refinedev/antd";
 import { BaseRecord } from "@refinedev/core";
-import { Row, Space, Table, Tabs } from "antd";
+import { Button, Row, Space, Table, Tabs } from "antd";
 import { useState } from "react";
 
 export const ListCourse = () => {
@@ -38,6 +39,7 @@ export const ListCourse = () => {
                 <ShowButton hideText size="small" recordItemId={record.id} />
                 <EditButton hideText size="small" recordItemId={record.id} />
                 <DeleteButton hideText size="small" recordItemId={record.id} />
+                <Button icon={<PlayCircleOutlined />} />
               </Space>
             )}
           />

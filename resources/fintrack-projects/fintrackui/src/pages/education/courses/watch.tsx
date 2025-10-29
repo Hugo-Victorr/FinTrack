@@ -1,144 +1,128 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Tree, Descriptions, Typography, Progress, Skeleton, message } from "antd";
-import { CheckCircleFilled } from "@ant-design/icons";
+import {
+  Row,
+  Col,
+  Card,
+  Tree,
+  Descriptions,
+  Typography,
+  Skeleton,
+  message,
+} from "antd";
+import { ListButton, Show } from "@refinedev/antd";
+import { useGo, useParsed, useShow } from "@refinedev/core";
 import ReactPlayer from "react-player";
 
 const { Title } = Typography;
 
-const course = {
-  id: "java-backend",
-  title: "Advanced Java Backend Development",
-  description: "Learn how to build scalable backends using Spring Boot, Kafka, and Redis.",
-  instructor: "Luiz Silva",
-  duration: "8h 25m",
-  level: "Intermediate",
-  lessons: [
-    {
-      title: "Introduction",
-      key: "0",
-      children: [
-        { title: "Welcome to the course", key: "0-0", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-        { title: "Setting up your environment", key: "0-1", url: "https://www.youtube.com/watch?v=ysz5S6PUM-U" },
-      ],
-    },
-    {
-      title: "Core Concepts",
-      key: "1",
-      children: [
-        { title: "Dependency Injection", key: "1-0", url: "https://www.youtube.com/watch?v=9bZkp7q19f0" },
-        { title: "RESTful APIs", key: "1-1", url: "https://www.youtube.com/watch?v=ysz5S6PUM-U" },
-      ],
-    },
-  ],
-};
+interface ICourseLesson {
+  title: string;
+  key: string; // use string for React keys (more consistent)
+  videoUrl: string;
+  children?: ICourseLesson[];
+}
 
-// Utility — flatten lessons for easier navigation
-const flattenLessons = (sections: any[]) =>
-  sections.flatMap(section => section.children.map((l: any) => ({ ...l, section: section.title })));
+interface ICourse {
+  id: string;
+  title: string;
+  description?: string;
+  aims?: string;
+  thumbnailUrl?: string;
+  instructor: string;
+  level: number;
+  durationMinutes: number;
+  courseContent: ICourseLesson[];
+}
 
 export const WatchCourse: React.FC = () => {
-  const lessons = flattenLessons(course.lessons);
+  const { id } = useParsed();
+  const go = useGo();
 
-  // Restore last lesson from localStorage
-  const savedKey = localStorage.getItem(`lastLesson_${course.id}`);
-  const [selectedLesson, setSelectedLesson] = useState(
-    lessons.find(l => l.key === savedKey) || lessons[0]
-  );
+  const { query: queryResult } = useShow<ICourse>({
+    resource: "course",
+    id,
+    meta: { headers: { "x-include-headers": "true" } },
+  });
 
-  const [completedKeys, setCompletedKeys] = useState<string[]>(
-    JSON.parse(localStorage.getItem(`completed_${course.id}`) || "[]")
-  );
+  const { isLoading, data } = queryResult;
+  const course = data?.data;
 
+  const lessons = course?.courseContent ?? [];
+
+  // Restore last lesson
+  const [selectedLesson, setSelectedLesson] = useState<ICourseLesson | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
 
+  useEffect(() => {
+    if (!course) return;
+    const savedKey = localStorage.getItem(`lastLesson_${course.id}`);
+    const firstLesson = lessons.flatMap(l => [l, ...(l.children ?? [])])[0];
+
+    if (savedKey) {
+      const found = lessons
+        .flatMap(section => [section, ...(section.children ?? [])])
+        .find(lesson => lesson.key === savedKey);
+      setSelectedLesson(found || firstLesson);
+    } else {
+      setSelectedLesson(firstLesson);
+    }
+  }, [course]);
+
   const onSelect = (_keys: React.Key[], info: any) => {
+    console.log(info)
+    console.log(_keys)
+    
     if (info.node.url) {
       setSelectedLesson(info.node);
-      localStorage.setItem(`lastLesson_${course.id}`, info.node.key);
+      localStorage.setItem(`lastLesson_${course?.id}`, info.node.key);
       setLoadingVideo(true);
     }
   };
 
-  const handleVideoReady = () => {
-    setLoadingVideo(false);
-  };
+  const handleVideoReady = () => setLoadingVideo(false);
 
-  const handleVideoEnd = () => {
-    // Mark as completed
-    if (!completedKeys.includes(selectedLesson.key)) {
-      const updated = [...completedKeys, selectedLesson.key];
-      setCompletedKeys(updated);
-      localStorage.setItem(`completed_${course.id}`, JSON.stringify(updated));
-      message.success(`Lesson "${selectedLesson.title}" completed!`);
-    }
-
-    // Auto-play next
-    const currentIndex = lessons.findIndex(l => l.key === selectedLesson.key);
-    const next = lessons[currentIndex + 1];
-    if (next) {
-      setSelectedLesson(next);
-      localStorage.setItem(`lastLesson_${course.id}`, next.key);
-      setLoadingVideo(true);
-    } else {
-      message.success("🎉 You've completed all lessons!");
-    }
-  };
-
-  const progress = Math.round((completedKeys.length / lessons.length) * 100);
+  // const handleVideoEnd = () => {
+  //   message.success(`Lesson "${selectedLesson?.title}" completed!`);
+  // };
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3} style={{ marginBottom: 16 }}>
-        {course.title}
-      </Title>
-
+    <Show
+      isLoading={isLoading}
+      title={course?.title}
+      headerButtons={({ listButtonProps }) => (
+        <>
+          {listButtonProps && <ListButton type="primary" {...listButtonProps} />}
+        </>
+      )}
+      headerProps={{
+        onBack: () => go({ to: { resource: "course", action: "list" } }),
+      }}
+    >
       <Row gutter={[16, 16]}>
-        {/* Sidebar: Lesson Tree */}
+        {/* Sidebar: Lessons */}
         <Col xs={24} md={6}>
-          <Card
-            title={
-              <>
-                Lessons
-                <Progress
-                  percent={progress}
-                  size="small"
-                  status={progress === 100 ? "success" : "active"}
-                  style={{ marginTop: 8 }}
-                />
-              </>
-            }
-            bordered
-          >
+          <Card title="Lessons" bordered>
             <Tree
-              treeData={course.lessons.map(section => ({
+              treeData={lessons.map(section => ({
                 title: section.title,
                 key: section.key,
-                children: section.children.map(lesson => ({
-                  title: (
-                    <>
-                      {completedKeys.includes(lesson.key) && (
-                        <CheckCircleFilled style={{ color: "#52c41a", marginRight: 6 }} />
-                      )}
-                      {lesson.title}
-                    </>
-                  ),
-                  key: lesson.key,
-                  url: lesson.url,
-                })),
+                children:
+                  section.children?.map(lesson => ({
+                    title: lesson.title,
+                    key: lesson.key,
+                    url: lesson.videoUrl,
+                  })) ?? [],
               }))}
               defaultExpandAll
               onSelect={onSelect}
-              selectedKeys={[selectedLesson.key]}
+              selectedKeys={selectedLesson ? [selectedLesson.key] : []}
             />
           </Card>
         </Col>
 
         {/* Main content: Video + Metadata */}
         <Col xs={24} md={18}>
-          <Card
-            title={<Title level={4}>{selectedLesson.title}</Title>}
-            bodyStyle={{ padding: 0, minHeight: 360 }}
-          >
+          <Card title={<Title level={4}>{selectedLesson?.title}</Title>}>
             <div style={{ position: "relative", paddingTop: "56.25%" }}>
               {loadingVideo && (
                 <Skeleton.Node
@@ -153,13 +137,13 @@ export const WatchCourse: React.FC = () => {
                 />
               )}
               <ReactPlayer
-                url={selectedLesson.url}
+                src={selectedLesson?.videoUrl}
                 controls
                 width="100%"
                 height="100%"
                 playing
                 onReady={handleVideoReady}
-                onEnded={handleVideoEnd}
+                // onEnded={handleVideoEnd}
                 style={{
                   position: "absolute",
                   top: 0,
@@ -171,16 +155,24 @@ export const WatchCourse: React.FC = () => {
             </div>
           </Card>
 
-          <Card style={{ marginTop: 16 }} title="Course Information">
+          <Card style={{ marginTop: 16 }} title="Information">
             <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="Instructor">{course.instructor}</Descriptions.Item>
-              <Descriptions.Item label="Level">{course.level}</Descriptions.Item>
-              <Descriptions.Item label="Duration">{course.duration}</Descriptions.Item>
-              <Descriptions.Item label="Description">{course.description}</Descriptions.Item>
+              <Descriptions.Item label="Instructor">
+                {course?.instructor}
+              </Descriptions.Item>
+              <Descriptions.Item label="Level">
+                {course?.level}
+              </Descriptions.Item>
+              <Descriptions.Item label="Duration (min)">
+                {course?.durationMinutes}
+              </Descriptions.Item>
+              <Descriptions.Item label="Description">
+                {course?.description}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
       </Row>
-    </div>
+    </Show>
   );
 };
