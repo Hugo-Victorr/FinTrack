@@ -10,8 +10,8 @@ public class EducationProfile : Profile
     {
         CreateMap<Course, CourseDto>();
         CreateMap<Course, CourseDetailsDto>();
-        CreateMap<CourseLessonDto, CourseLesson>();        
-        
+        CreateMap<CourseLessonDto, CourseLesson>();
+
         CreateMap<CourseCreateDto, Course>();
         CreateMap<CourseModuleCreateDto, CourseModule>();
         CreateMap<CourseUpdateDto, Course>()
@@ -24,5 +24,8 @@ public class EducationProfile : Profile
         CreateMap<CourseCategoryUpdateDto, CourseCategory>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+        CreateMap<CourseProgressDto, CourseProgress>();
+        CreateMap<LessonProgressDto, CourseLessonProgress>();
     }
 }

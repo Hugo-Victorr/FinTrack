@@ -95,13 +95,13 @@ public class CourseService
     {
         List<CourseContentDto> res = [];
 
-        foreach (CourseModule module in course.Modules)
+        foreach (CourseModule module in course.Modules.OrderBy(k => k.OrderIndex))
         {
-            CourseContentDto mod = new CourseContentDto(module.Name, module.OrderIndex);
+            CourseContentDto mod = new CourseContentDto(module.Name, module.OrderIndex, module.Id);
 
-            foreach (CourseLesson lesson in module.Lessons)
+            foreach (CourseLesson lesson in module.Lessons.OrderBy(k => k.Order))
             {
-                mod.AddLessonToModule(lesson.Title, lesson.Order, lesson.VideoUrl!);
+                mod.AddLessonToModule(lesson.Title, lesson.Order, lesson.VideoUrl!, lesson.Id);
             }
 
             res.Add(mod);

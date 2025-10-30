@@ -20,9 +20,8 @@ import routerProvider, {
   NavigateToResource,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import { dataProvider } from "./rest-data-provider";
+import { dataProvider } from "./providers/rest-data-provider";
 import { App as AntdApp } from "antd";
-import axios from "axios";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
 import { ColorModeContextProvider } from "./contexts/color-mode";
@@ -30,88 +29,14 @@ import { Login } from "./pages/login";
 import { CourseCategoryList } from "./pages/education/course-categories";
 import { ListCourse, ShowCourse, WatchCourse } from "./pages/education/courses";
 import { FintrackLogo } from "./components/icons/fintrackLogo";
+import { authProvider } from "./providers/auth-provider";
 
 function App() {
-  const { keycloak, initialized } = useKeycloak();
+  const { initialized } = useKeycloak();
 
-  // if (!initialized) {
-  //   return <div>Loading...</div>;
-  // }
-
-  const authProvider: AuthProvider = {
-    login: async () => {
-      const urlSearchParams = new URLSearchParams(window.location.search);
-      const { to } = Object.fromEntries(urlSearchParams.entries());
-      await keycloak.login({
-        redirectUri: to ? `${window.location.origin}${to}` : undefined,
-      });
-      return {
-        success: true,
-      };
-    },
-    logout: async () => {
-      try {
-        await keycloak.logout({
-          redirectUri: window.location.origin,
-        });
-        return {
-          success: true,
-          redirectTo: "/login",
-        };
-      } catch (error) {
-        return {
-          success: false,
-          error: new Error("Logout failed"),
-        };
-      }
-    },
-    onError: async (error) => {
-      console.error(error);
-      return { error };
-    },
-    check: async () => {
-      try {
-        const { token } = keycloak;
-        if (token) {
-          axios.defaults.headers.common = {
-            Authorization: `Bearer ${token}`,
-          };
-          return {
-            authenticated: true,
-          };
-        } else {
-          return {
-            authenticated: false,
-            logout: true,
-            redirectTo: "/login",
-            error: {
-              message: "Check failed",
-              name: "Token not found",
-            },
-          };
-        }
-      } catch (error) {
-        return {
-          authenticated: false,
-          logout: true,
-          redirectTo: "/login",
-          error: {
-            message: "Check failed",
-            name: "Token not found",
-          },
-        };
-      }
-    },
-    getPermissions: async () => null,
-    getIdentity: async () => {
-      if (keycloak?.tokenParsed) {
-        return {
-          name: keycloak.tokenParsed.family_name,
-        };
-      }
-      return null;
-    },
-  };
+  if (!initialized) {
+     return <div>Loading...</div>;
+  }
 
   return (
     <BrowserRouter>
@@ -122,7 +47,7 @@ function App() {
               dataProvider={dataProvider("http://localhost:5166/api")}
               notificationProvider={useNotificationProvider}
               routerProvider={routerProvider}
-              // authProvider={authProvider}
+              authProvider={authProvider}
               resources={[
                 {
                   name: "course",

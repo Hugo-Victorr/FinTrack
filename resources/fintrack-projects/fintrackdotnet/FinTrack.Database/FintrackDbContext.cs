@@ -18,6 +18,8 @@ namespace FinTrack.Database
         public DbSet<CourseModule> CourseModules { get; set; } = null!;
         public DbSet<CourseTag> CourseTags { get; set; } = null!;
         public DbSet<CourseTagAssignment> CourseTagAssignments { get; set; } = null!;
+        public DbSet<CourseProgress> CourseProgresses { get; set; } = null!;
+        public DbSet<CourseLessonProgress> CourseLessonProgresses { get; set; } = null!;
 
         static FintrackDbContext() { }
 

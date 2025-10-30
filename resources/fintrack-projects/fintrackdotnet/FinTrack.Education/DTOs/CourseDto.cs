@@ -6,5 +6,6 @@ public record CourseDto(
     string Description,
     CourseCategoryDto Category,
     bool IsPublished,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int LessonsLength
 );

@@ -2,11 +2,13 @@ using FinTrack.Education.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using FinTrack.Education.Services;
 using FinTrack.Database.EFDao;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Fintrack.Education.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CourseCategoryController(CourseCategoryService service) : ControllerBase
 {
     [HttpGet]

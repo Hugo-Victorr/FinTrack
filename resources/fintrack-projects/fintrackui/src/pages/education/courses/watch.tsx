@@ -72,7 +72,7 @@ export const WatchCourse: React.FC = () => {
     console.log(info)
     console.log(_keys)
     
-    if (info.node.url) {
+    if (info.node.videoUrl) {
       setSelectedLesson(info.node);
       localStorage.setItem(`lastLesson_${course?.id}`, info.node.key);
       setLoadingVideo(true);
@@ -110,7 +110,7 @@ export const WatchCourse: React.FC = () => {
                   section.children?.map(lesson => ({
                     title: lesson.title,
                     key: lesson.key,
-                    url: lesson.videoUrl,
+                    videoUrl: lesson.videoUrl,
                   })) ?? [],
               }))}
               defaultExpandAll

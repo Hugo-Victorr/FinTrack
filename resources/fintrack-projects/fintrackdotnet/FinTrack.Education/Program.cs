@@ -1,14 +1,17 @@
 using FinTrack.Database;
 using FinTrack.Database.Interfaces;
 using FinTrack.Database.Migrations;
+using FinTrack.Education.Middlewares;
 using FinTrack.Education.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+// TODO: enable in production
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
@@ -19,6 +22,27 @@ builder.Services.AddCors(options =>
     });
 });
 
+///////////VALIDATION ONLY
+///dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "http://localhost:8080/realms/fintrack-homol"; // your Keycloak realm
+        options.Audience = "backend-client"; // Keycloak client ID
+        options.RequireHttpsMetadata = false; // for local dev only
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true
+        };
+
+    });
+
+/////////////////////////////////
+
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -80,6 +104,20 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("DevCors");
 
+//////////////////VALIDATION ONLY
+app.Use(async (context, next) =>
+{
+    var user = context.User;
+    if (user.Identity?.IsAuthenticated == true)
+    {
+        context.Request.Headers["X-User-Id"] = user.FindFirst("sub")?.Value ?? "";
+        // context.Request.Headers["X-User-Email"] = user.FindFirst("email")?.Value ?? "";
+    }
+    await next();
+});
+////////////////////
+app.UseMiddleware<ApiGatewayUserContextMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,6 +1,7 @@
 using FinTrack.Database.EFDao;
 using FinTrack.Education.DTOs;
 using FinTrack.Education.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +9,7 @@ namespace Fintrack.Education.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CourseController(CourseService _courseService) : ControllerBase
 {
     [HttpGet]
@@ -34,8 +36,11 @@ public class CourseController(CourseService _courseService) : ControllerBase
     [HttpPost("/module")]
     public async Task<IActionResult> AddModule([FromBody] CourseModuleCreateDto dto)
     {
-        await _courseService.AddModuleAsync(dto);
+        if (await _courseService.AddModuleAsync(dto))
         return StatusCode(StatusCodes.Status201Created);
+
+        // TODO: informar mensagem de erro
+        return BadRequest();
     }
 
     [HttpPut("{id:guid}")]

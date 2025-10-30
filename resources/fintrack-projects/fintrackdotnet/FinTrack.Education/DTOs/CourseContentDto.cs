@@ -16,24 +16,23 @@ public class CourseContentDto
     public List<CourseContentDto>? Children { get; }
 
     // Module
-    public CourseContentDto(string title, int key)
+    public CourseContentDto(string title, int moduleIdx, Guid id)
     {
-        Title = string.Format("{0}. {1}", key, title);
+        Title = string.Format("{0}. {1}", moduleIdx, title);
         Children = [];
-        ModuleKey = key;
-        Key = key.ToString();
+        Key = id.ToString();
     }
 
     // Lesson
-    public CourseContentDto(string title, int key, int moduleKey, string videoUrl)
+    public CourseContentDto(string title, int lessonIdx, int moduleIdx, string videoUrl, Guid id)
     {
-        Title = string.Format("{0}.{1} - {2}", key, moduleKey, title);
+        Title = string.Format("{0}.{1} - {2}", lessonIdx, moduleIdx, title);
         VideoUrl = videoUrl;
-        Key = string.Format("{0}-{1}", moduleKey, key);
+        Key = id.ToString();
     }
 
-    public void AddLessonToModule(string title, int key, string videoUrl)
+    public void AddLessonToModule(string title, int idx, string videoUrl, Guid id)
     {
-        this.Children!.Add(new CourseContentDto(title, key, this.ModuleKey, videoUrl));
+        this.Children!.Add(new CourseContentDto(title, idx, this.ModuleKey, videoUrl, id));
     }
 }
