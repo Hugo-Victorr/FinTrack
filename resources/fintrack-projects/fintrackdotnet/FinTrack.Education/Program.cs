@@ -3,44 +3,22 @@ using FinTrack.Database.Interfaces;
 using FinTrack.Database.Migrations;
 using FinTrack.Education.Middlewares;
 using FinTrack.Education.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// TODO: enable in production
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.AllowAnyOrigin()   // TODO: disable "allow any" in production
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
-
-///////////VALIDATION ONLY
-///dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = "http://localhost:8080/realms/fintrack-homol"; // your Keycloak realm
-        options.Audience = "backend-client"; // Keycloak client ID
-        options.RequireHttpsMetadata = false; // for local dev only
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateAudience = true,
-            ValidateIssuer = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true
-        };
-
-    });
-
-/////////////////////////////////
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -65,10 +43,17 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ICourseModuleRepository, CourseModuleRepository>();
 builder.Services.AddScoped<ICourseCategoryRepository, CourseCategoryRepository>();
+builder.Services.AddScoped<ICourseLearningPlanRepository, CourseLearningPlanRepository>();
+builder.Services.AddScoped<ICourseLessonProgressRepository, CourseLessonProgressRepository>();
+builder.Services.AddScoped<ICourseLessonRepository, CourseLessonRepository>();
+builder.Services.AddScoped<ICourseTagAssigmentRepository, CourseTagAssigmentRepository>();
+builder.Services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
+builder.Services.AddScoped<ICourseTagRepository, CourseTagRepository>();
 
 // Register Services
 builder.Services.AddScoped<CourseService>();
 builder.Services.AddScoped<CourseCategoryService>();
+builder.Services.AddScoped<ProgressService>();
 
 var app = builder.Build();
 
@@ -104,18 +89,6 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("DevCors");
 
-//////////////////VALIDATION ONLY
-app.Use(async (context, next) =>
-{
-    var user = context.User;
-    if (user.Identity?.IsAuthenticated == true)
-    {
-        context.Request.Headers["X-User-Id"] = user.FindFirst("sub")?.Value ?? "";
-        // context.Request.Headers["X-User-Email"] = user.FindFirst("email")?.Value ?? "";
-    }
-    await next();
-});
-////////////////////
 app.UseMiddleware<ApiGatewayUserContextMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

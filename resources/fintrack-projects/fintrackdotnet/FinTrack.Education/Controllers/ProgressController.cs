@@ -12,21 +12,22 @@ namespace Fintrack.Education.Controllers;
 public class ProgressController(ProgressService _progressService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetCourseProgress()
     {
         return Ok();
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    [HttpGet("{courseId:guid}/lessons")]
+    public async Task<IActionResult> GetLessonsProgression(Guid courseId)
     {
-        return Ok();
+        Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        return Ok(await _progressService.GetLessonsProgress(userId, courseId));
     }
 
     [HttpPost]
     public async Task<IActionResult> UpdateLessonProgress([FromBody] LessonProgressDto dto)
     {
-        Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
 
         await _progressService.UpdateProgress(userId, dto);
         return Ok();

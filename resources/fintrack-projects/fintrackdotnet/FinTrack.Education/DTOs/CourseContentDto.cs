@@ -19,6 +19,7 @@ public class CourseContentDto
     public CourseContentDto(string title, int moduleIdx, Guid id)
     {
         Title = string.Format("{0}. {1}", moduleIdx, title);
+        ModuleKey = moduleIdx;
         Children = [];
         Key = id.ToString();
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Row,
   Col,
@@ -8,86 +8,82 @@ import {
   Typography,
   Skeleton,
   message,
+  Spin,
 } from "antd";
 import { ListButton, Show } from "@refinedev/antd";
-import { useGo, useParsed, useShow } from "@refinedev/core";
+import { useApiUrl, useCustom, useGo, useOne, useParsed, useShow } from "@refinedev/core";
 import ReactPlayer from "react-player";
+import { ICourse, ICourseLesson } from "./types";
 
 const { Title } = Typography;
-
-interface ICourseLesson {
-  title: string;
-  key: string; // use string for React keys (more consistent)
-  videoUrl: string;
-  children?: ICourseLesson[];
-}
-
-interface ICourse {
-  id: string;
-  title: string;
-  description?: string;
-  aims?: string;
-  thumbnailUrl?: string;
-  instructor: string;
-  level: number;
-  durationMinutes: number;
-  courseContent: ICourseLesson[];
-}
+const { DirectoryTree } = Tree;
 
 export const WatchCourse: React.FC = () => {
   const { id } = useParsed();
   const go = useGo();
+  const apiUrl = useApiUrl();
 
-  const { query: queryResult } = useShow<ICourse>({
+  // === State management ===
+  const [selectedLesson, setSelectedLesson] = useState<ICourseLesson>();
+  const [loadingVideo, setLoadingVideo] = useState(false);
+  const [loadingLessonTree, setLoadingLessonTree] = useState(true);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+
+  // === Load course and lessons ===
+  const { query: { isLoading: courseIsLoading, data } } = useShow<ICourse>({
     resource: "course",
     id,
-    meta: { headers: { "x-include-headers": "true" } },
+    meta: { headers: { "x-include-lessons": "true" } },
   });
 
-  const { isLoading, data } = queryResult;
   const course = data?.data;
-
   const lessons = course?.courseContent ?? [];
 
-  // Restore last lesson
-  const [selectedLesson, setSelectedLesson] = useState<ICourseLesson | null>(null);
-  const [loadingVideo, setLoadingVideo] = useState(false);
+  const { query: { data: progData, isLoading: progIsLoading } } = useCustom({
+    method: "get",
+    url: `${apiUrl}/progress/${course?.id}/lessons`,
+    queryOptions: {
+      enabled: !!course?.id,
+    }
+  });
+
+  const progress: any = progData?.data;
 
   useEffect(() => {
-    if (!course) return;
-    const savedKey = localStorage.getItem(`lastLesson_${course.id}`);
-    const firstLesson = lessons.flatMap(l => [l, ...(l.children ?? [])])[0];
+    // wait until lessons are loaded and progress is defined
+    if (!lessons.length || progress === undefined) return;
 
-    if (savedKey) {
-      const found = lessons
-        .flatMap(section => [section, ...(section.children ?? [])])
-        .find(lesson => lesson.key === savedKey);
-      setSelectedLesson(found || firstLesson);
-    } else {
+    // only run this logic when there is no progress yet
+    if (progress.length === 0) {
+      const firstSection = lessons[0];
+      const firstLesson = firstSection?.children?.[0];
+
+      if (!firstSection || !firstLesson) return;
+
+      const newExpandedKeys = [firstSection.key];
+      setExpandedKeys(newExpandedKeys);
       setSelectedLesson(firstLesson);
-    }
-  }, [course]);
+    } else {
 
+    }
+
+    setLoadingLessonTree(false);
+  }, [progress]);
+
+
+  // === Handle user lesson selection from the tree ===
   const onSelect = (_keys: React.Key[], info: any) => {
-    console.log(info)
-    console.log(_keys)
-    
-    if (info.node.videoUrl) {
+    if (info.node.videoUrl && info.node.key !== selectedLesson!.key) {
       setSelectedLesson(info.node);
-      localStorage.setItem(`lastLesson_${course?.id}`, info.node.key);
       setLoadingVideo(true);
     }
   };
 
-  const handleVideoReady = () => setLoadingVideo(false);
-
-  // const handleVideoEnd = () => {
-  //   message.success(`Lesson "${selectedLesson?.title}" completed!`);
-  // };
+  const handleVideoReady = () => setTimeout(() => {setLoadingVideo(false)}, 500);
 
   return (
     <Show
-      isLoading={isLoading}
+      isLoading={courseIsLoading || progIsLoading}
       title={course?.title}
       headerButtons={({ listButtonProps }) => (
         <>
@@ -99,31 +95,44 @@ export const WatchCourse: React.FC = () => {
       }}
     >
       <Row gutter={[16, 16]}>
-        {/* Sidebar: Lessons */}
+        {/* Sidebar: Lessons list */}
         <Col xs={24} md={6}>
-          <Card title="Lessons" bordered>
-            <Tree
-              treeData={lessons.map(section => ({
-                title: section.title,
-                key: section.key,
-                children:
-                  section.children?.map(lesson => ({
-                    title: lesson.title,
-                    key: lesson.key,
-                    videoUrl: lesson.videoUrl,
-                  })) ?? [],
-              }))}
-              defaultExpandAll
-              onSelect={onSelect}
-              selectedKeys={selectedLesson ? [selectedLesson.key] : []}
-            />
+          <Card title="Lessons">
+            {
+              loadingLessonTree ?
+                <Spin></Spin>
+                :
+                <DirectoryTree
+                  showIcon={false}
+                  treeData={lessons.map(section => ({
+                    title: section.title,
+                    key: section.key,
+                    children:
+                      section.children?.map(lesson => ({
+                        title: lesson.title,
+                        key: lesson.key,
+                        videoUrl: lesson.videoUrl,
+                      })) ?? [],
+                  }))}
+                  onSelect={onSelect}
+                  defaultExpandedKeys={expandedKeys}
+                  selectedKeys={selectedLesson ? [selectedLesson.key] : []}
+                />
+            }
           </Card>
         </Col>
 
-        {/* Main content: Video + Metadata */}
+        {/* Main Content: Video player + Course Info */}
         <Col xs={24} md={18}>
           <Card title={<Title level={4}>{selectedLesson?.title}</Title>}>
-            <div style={{ position: "relative", paddingTop: "56.25%" }}>
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "16 / 9", // replaces paddingTop trick
+                overflow: "hidden",
+              }}
+            >
               {loadingVideo && (
                 <Skeleton.Node
                   active
@@ -131,8 +140,7 @@ export const WatchCourse: React.FC = () => {
                     width: "100%",
                     height: "100%",
                     position: "absolute",
-                    top: 0,
-                    left: 0,
+                    inset: 0,
                   }}
                 />
               )}
@@ -141,18 +149,16 @@ export const WatchCourse: React.FC = () => {
                 controls
                 width="100%"
                 height="100%"
-                playing
                 onReady={handleVideoReady}
-                // onEnded={handleVideoEnd}
                 style={{
                   position: "absolute",
-                  top: 0,
-                  left: 0,
+                  inset: 0,
                   opacity: loadingVideo ? 0 : 1,
-                  transition: "opacity 0.3s",
+                  transition: "opacity 0.3s ease",
                 }}
               />
             </div>
+
           </Card>
 
           <Card style={{ marginTop: 16 }} title="Information">

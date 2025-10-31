@@ -20,7 +20,7 @@ public class CourseController(CourseService _courseService) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id, [FromHeader(Name = "x-include-headers")] bool includeLessons = false)
+    public async Task<IActionResult> GetById(Guid id, [FromHeader(Name = "x-include-lessons")] bool includeLessons = false)
     {
         var result = await _courseService.GetByIdAsync(id, includeLessons);
         return result is null ? NotFound() : Ok(result);

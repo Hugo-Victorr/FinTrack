@@ -8,6 +8,10 @@ axiosInstance.interceptors.request.use(async (config) => {
   if (keycloak?.tokenParsed) {
     console.log(keycloak?.tokenParsed)
     config.headers.Authorization = `Bearer ${keycloak.token}`;
+
+    // Validation only
+    config.headers["X-User-Id"] = keycloak?.tokenParsed.sub
+    config.headers["X-User-Roles"] = ["admin"]
   }
   return config;
 });
