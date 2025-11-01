@@ -4,7 +4,7 @@ interface CourseLevelProps {
   level: number | undefined;
 }
 
-export const CourseLevel = (props: CourseLevelProps) => {
+export const CourseLevelTag = (props: CourseLevelProps) => {
   let color;
   let text;
 

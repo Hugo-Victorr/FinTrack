@@ -1,8 +1,13 @@
+using FinTrack.Model.Enums;
+
 namespace FinTrack.Education.DTOs;
 
 public record CourseCreateDto(
     string Title,
-    string Description,
     string CategoryId,
-    bool IsPublished
+    string Description,
+    bool IsPublished,
+    string Aims,
+    string Instructor,
+    CourseLevel Level
 );

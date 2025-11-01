@@ -8,9 +8,9 @@ import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import {
   ErrorComponent,
   ThemedLayout,
-  ThemedSider,
   useNotificationProvider,
 } from "@refinedev/antd";
+import { ThemedSider } from "./components/layout/sider";
 import "@refinedev/antd/dist/reset.css";
 
 import { useKeycloak } from "@react-keycloak/web";

@@ -3,7 +3,7 @@ import { Card, Row, Col, Button, Typography, Descriptions, Progress, Space } fro
 import { PlayCircleOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useGo, useOne, useParsed, useShow } from "@refinedev/core";
 import { ListButton, Show } from "@refinedev/antd";
-import { CourseLevel } from "../../../components/course/levelTag";
+import { CourseLevelTag } from "../../../components/course/levelTag";
 import { ICourse } from "./types";
 
 const { Title, Paragraph } = Typography;
@@ -91,7 +91,7 @@ export const ShowCourse: React.FC = () => {
                 <Descriptions.Item label="Instructor">{course?.instructor}</Descriptions.Item>
                 <Descriptions.Item label="Category">{course?.category.name}</Descriptions.Item>
                 <Descriptions.Item label="Level">
-                  <CourseLevel level={course?.level} />
+                  <CourseLevelTag level={course?.level} />
                 </Descriptions.Item>
                 <Descriptions.Item label="Duration">{formatDuration(course?.durationMinutes)}</Descriptions.Item>
                 <Descriptions.Item label="Lessons">{0}</Descriptions.Item>
