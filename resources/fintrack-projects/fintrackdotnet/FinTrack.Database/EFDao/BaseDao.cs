@@ -103,9 +103,11 @@ namespace FinTrack.Database.EFDao
             //}
 
             DbSet<TEntity> dbSet = _context.Set<TEntity>();
-            entity = track ?
-                await dbSet.FindAsync(key) :
-                await dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.Id.Equals(key));
+            //entity = track ?
+            //    await dbSet.FindAsync(key) :
+            //    await dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.Id.Equals(key));
+
+            var result = dbSet.FirstOrDefault(p => p.Id.Equals(key));
 
             if (entity != null && entity.DeletedAt == null)
             {

@@ -1,4 +1,6 @@
 using FinTrack.Database;
+using FinTrack.Database.Contracts;
+using FinTrack.Database.EFDao;
 using FinTrack.Database.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -18,6 +20,10 @@ builder.Services.AddDbContext<FintrackDbContext>(options =>
 });
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddTransient<IStartupFilter, MigrationStartupFilter<FintrackDbContext>>();
+
+builder.Services.AddTransient<IExpenseDao, ExpenseDao>();
+builder.Services.AddTransient<IExpenseCategoryDao, ExpenseCategoryDao>();
+builder.Services.AddTransient<IWalletDao, WalletDao>();
 
 var app = builder.Build();
 
