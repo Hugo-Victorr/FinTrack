@@ -1,4 +1,5 @@
 using FinTrack.Model.Enums;
+using FinTrack.Model.DTO;
 
 namespace FinTrack.Model.Entities
 {
@@ -34,6 +35,21 @@ namespace FinTrack.Model.Entities
         public double GetAmount()
         {
             return Amount;
+        }
+
+        public Wallet() : base() { }
+
+        public Wallet(WalletDTO dto) : base()
+        {
+            Id = dto.Id;
+            Name = dto.Name;
+            Description = dto.Description;
+            Amount = dto.Amount;
+            Currency = dto.Currency;
+            WalletCategory = dto.WalletCategory;
+            CreatedAt = dto.CreatedAt;
+            UpdatedAt = dto.UpdatedAt;
+            User = dto.User;
         }
     }
 }

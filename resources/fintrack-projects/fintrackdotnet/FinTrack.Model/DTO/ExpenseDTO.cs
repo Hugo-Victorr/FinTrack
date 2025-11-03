@@ -1,8 +1,8 @@
-using FinTrack.Model.DTO;
+﻿using FinTrack.Model.Entities;
 
-namespace FinTrack.Model.Entities
+namespace FinTrack.Model.DTO
 {
-    public class Expense : BaseEntity
+    public class ExpenseDTO
     {
         public string Description { get; set; } = string.Empty;
         public Guid ExpenseCategoryId { get; set; }
@@ -11,30 +11,36 @@ namespace FinTrack.Model.Entities
         public DateTime ExpenseDate { get; set; }
         public Guid Id { get; set; } = Guid.NewGuid();
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToLocalTime();
-        public DateTime? DeletedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Guid User { get; set; }
 
-        public Expense() : base() { }
+        public ExpenseDTO() { }
 
-        public Expense(double amount, string description, DateTime expenseDate) : base()
+        public ExpenseDTO(Expense expense)
         {
-            Amount = amount;
-            Description = description;
-            ExpenseDate = expenseDate;
-        }
-
-        public Expense(ExpenseDTO expense) : base()
-        {
-            Amount = expense.Amount;
+            Id = expense.Id;
             Description = expense.Description;
-            ExpenseDate = expense.ExpenseDate;
             ExpenseCategoryId = expense.ExpenseCategoryId;
             ExpenseCategory = expense.ExpenseCategory;
-            Id = expense.Id;
+            Amount = expense.Amount;
+            ExpenseDate = expense.ExpenseDate;
             CreatedAt = expense.CreatedAt;
             UpdatedAt = expense.UpdatedAt;
             User = expense.User;
         }
+
+        public Expense ToExpense() => new()
+        {
+            Id = Id,
+            Description = Description,
+            ExpenseCategoryId = ExpenseCategoryId,
+            ExpenseCategory = ExpenseCategory,
+            Amount = Amount,
+            ExpenseDate = ExpenseDate,
+            CreatedAt = CreatedAt,
+            UpdatedAt = UpdatedAt,
+            User = User
+        };
+
     }
 }

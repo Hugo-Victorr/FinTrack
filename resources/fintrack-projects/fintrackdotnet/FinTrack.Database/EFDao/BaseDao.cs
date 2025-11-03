@@ -79,7 +79,7 @@ namespace FinTrack.Database.EFDao
             DbSet<TEntity> dbSet = _context.Set<TEntity>();
             foreach (object item in keys)
             {
-                TEntity? entity = await dbSet.FindAsync(item);
+                TEntity? entity = await dbSet.FirstOrDefaultAsync(p => p.Id.Equals(item));
                 if (entity != null)
                 {
                     entity.DeletedAt = entity.UpdatedAt = DateTime.Now.ToUniversalTime();
@@ -93,28 +93,17 @@ namespace FinTrack.Database.EFDao
 
         public virtual async Task<TEntity?> FindAsync(object key, bool track = false)
         {
-            TEntity? entity = null;
-
-            //if (key != null && _cache != null && !track)
-            //{
-            //    entity = _cache.GetEntity(key.ToString()!);
-            //    if (entity != null)
-            //        return entity;
-            //}
-
             DbSet<TEntity> dbSet = _context.Set<TEntity>();
-            entity = track ?
-                await dbSet.FindAsync(key) :
-                await dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.Id.Equals(key));
+            IQueryable<TEntity> query = dbSet.Where(p => p.Id.Equals(key));
+            if (!track)
+                query = query.AsNoTracking();
 
-            if (entity != null && entity.DeletedAt == null)
+            TEntity? entity = await query.FirstOrDefaultAsync();
+            if (entity == null || entity.DeletedAt != null)
             {
-                //if (!track)
-                //    _cache?.AddEntity(entity);
-                return entity;
+                return null;
             }
-
-            return null;
+            return entity;
         }
 
         public async Task<int> RestoreAsync(params TEntity[] obj)
