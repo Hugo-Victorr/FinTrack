@@ -24,5 +24,46 @@ namespace FinTrack.Expenses.Services
                 throw new Exception(errorMsg, ex);
             }
         }
+
+        public async Task<ExpenseDTO?> GetByIdAsync(Guid id)
+        {
+            Expense? entity = await _expenseDao.FindAsync(id);
+            return entity == null ? null : new ExpenseDTO(entity);
+        }
+
+        public async Task<ExpenseDTO> CreateAsync(ExpenseDTO dto)
+        {
+            Expense entity = dto.ToExpense();
+            await _expenseDao.AddAsync(entity);
+            return new ExpenseDTO(entity);
+        }
+
+        public async Task<bool> UpdateAsync(Guid id, ExpenseDTO dto)
+        {
+            Expense? existing = await _expenseDao.FindAsync(id, track: true);
+            if (existing == null) return false;
+
+            existing.Description = dto.Description;
+            existing.ExpenseCategoryId = dto.ExpenseCategoryId;
+            existing.Amount = dto.Amount;
+            existing.ExpenseDate = dto.ExpenseDate;
+            existing.User = dto.User;
+            int updated = await _expenseDao.UpdateAsync(existing);
+            return updated > 0;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            int deleted = await _expenseDao.DeleteAsync(id);
+            return deleted > 0;
+        }
+
+        public async Task<bool> RestoreAsync(Guid id)
+        {
+            Expense? existing = await _expenseDao.FindAsync(id, track: true);
+            if (existing == null) return false;
+            int restored = await _expenseDao.RestoreAsync(existing);
+            return restored > 0;
+        }
     }
 }
