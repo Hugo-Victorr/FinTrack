@@ -36,7 +36,8 @@ namespace FinTrack.Expenses.Controllers
         public async Task<IActionResult> CreateAsync([FromBody] ExpenseDTO dto)
         {
             ExpenseDTO created = await _expenseService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = created.Id }, created);
+            return Ok(created);
+            //return CreatedAtAction(nameof(GetByIdAsync), new { id = created.Id }, created);
         }
 
         [HttpPut("{id:guid}")]
