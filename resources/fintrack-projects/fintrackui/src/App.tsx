@@ -1,129 +1,115 @@
 import {
-  Authenticated,
-  AuthProvider,
   Refine,
 } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
+import { theme as antdTheme } from "antd";
 
 import {
-  ErrorComponent,
-  ThemedLayout,
   useNotificationProvider,
 } from "@refinedev/antd";
-import { ThemedSider } from "./components/layout/sider";
 import "@refinedev/antd/dist/reset.css";
 
 import { useKeycloak } from "@react-keycloak/web";
 import routerProvider, {
-  CatchAllNavigate,
   DocumentTitleHandler,
-  NavigateToResource,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import { dataProvider } from "./providers/rest-data-provider";
 import { App as AntdApp } from "antd";
-import { BrowserRouter, Outlet, Route, Routes } from "react-router";
-import { Header } from "./components/header";
-import { ColorModeContextProvider } from "./contexts/color-mode";
-import { Login } from "./pages/login";
-import { CourseCategoryList } from "./pages/education/course-categories";
-import { ListCourse, ShowCourse, WatchCourse } from "./pages/education/courses";
+import { BrowserRouter } from "react-router";
 import { FintrackLogo } from "./components/icons/fintrackLogo";
+import { ColorModeContextProvider } from "./contexts/color-mode";
+import { accessControlProvider } from "./providers/access-control-provider";
 import { authProvider } from "./providers/auth-provider";
+import { dataProvider } from "./providers/rest-data-provider";
+import { appResources, AppRoutes } from "./routes/resources";
+import { useEffect, useState } from "react";
+import Lottie from 'react-lottie';
+import splashIcon from "./components/lotties/coin-splash.json"
+import "./styles.css"
 
 function App() {
   const { initialized } = useKeycloak();
 
-  if (!initialized) {
-     return <div>Loading...</div>;
+  const [ready, setReady] = useState(false);
+  const { token } = antdTheme.useToken();
+
+  const mountedStyle = { animation: "inAnimation 750ms ease-in" };
+  const unmountedStyle = {
+    animation: "outAnimation 750ms ease-out",
+    animationFillMode: "forwards"
+  };
+  
+  useEffect(() => {
+    // Wait for Keycloak + a minimum 2s splash delay
+    if (initialized) {
+      const timer = setTimeout(() => {
+        setReady(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [initialized]);
+
+  if (!ready) {
+    return (
+      <div
+        className="splash"
+        // style={{
+        //   height: "100vh",
+        //   display: "flex",
+        //   justifyContent: "center",
+        //   alignItems: "center",
+        // }}
+      >
+        <Lottie
+          options={{
+            loop: true,
+            autoPlay: true,
+            animationData: splashIcon,
+            rendererSettings: {
+              preserveAspectRatio: "xMidYMid slice"
+            }
+          }}
+          height={150}
+          width={150}
+        />
+      </div>
+    );
   }
+
+  // if (!initialized) {
+  //   return (<div style={{backgroundColor: "black", height: "100vh"}}>adf</div>)
+  // }
 
   return (
     <BrowserRouter>
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <AntdApp>
-            <Refine
-              dataProvider={dataProvider("http://localhost:5166/api")}
-              notificationProvider={useNotificationProvider}
-              routerProvider={routerProvider}
-              authProvider={authProvider}
-              resources={[
-                {
-                  name: "course",
-                  list: "/course",
-                  show: "/course/show/:id",
-                  create: "/course/create",
-                  edit: "/course/edit/:id",
-                  meta: {
-                    canDelete: true,
-                  },
-                },
-                {
-                  name: "coursecategory",
-                  list: "/coursecategory",
-                  create: "/coursecategory/create",
-                  edit: "/coursecategory/edit/:id",
-                  meta: {
-                    canDelete: true,
-                  },
-                },
-              ]}
-              options={{
-                syncWithLocation: true,
-                warnWhenUnsavedChanges: true,
-                projectId: "G9f8XF-O7GGK6-BspEWd",
-                disableTelemetry: true, 
-                
-                title: {
-                  icon: <FintrackLogo/>,
-                  text: "FinTrack Project"
-                }
-              }}
-            >
-              <Routes>
-                <Route
-                  element={
-                    <Authenticated
-                      key="authenticated-inner"
-                      fallback={<CatchAllNavigate to="/login" />}
-                    >
-                      <ThemedLayout
-                        Header={Header}
-                        Sider={(props) => <ThemedSider {...props} fixed />}
-                      >
-                        <Outlet />
-                      </ThemedLayout>
-                    </Authenticated>
+            <div className="transitionDiv" style={initialized ? mountedStyle : unmountedStyle}>
+              <Refine
+                dataProvider={dataProvider("http://localhost:5166/api")}
+                notificationProvider={useNotificationProvider}
+                routerProvider={routerProvider}
+                authProvider={authProvider}
+                accessControlProvider={accessControlProvider}
+                resources={appResources}
+                options={{
+                  syncWithLocation: true,
+                  warnWhenUnsavedChanges: true,
+                  projectId: "G9f8XF-O7GGK6-BspEWd",
+                  disableTelemetry: true,
+                  title: {
+                    icon: <FintrackLogo />,
+                    text: "FinTrack Project"
                   }
-                >
-                  <Route path="/course">
-                    <Route index element={<ListCourse />} />
-                    <Route path="show/:id" element={<ShowCourse />} />
-                    <Route path="watch/:id" element={<WatchCourse />} />
-                  </Route>
-                  <Route path="/coursecategory">
-                    <Route index element={<CourseCategoryList />} />
-                  </Route>
-                  <Route path="*" element={<ErrorComponent />} />
-                </Route>
-                <Route
-                  element={
-                    <Authenticated
-                      key="authenticated-outer"
-                      fallback={<Outlet />}
-                    >
-                      <NavigateToResource />
-                    </Authenticated>
-                  }
-                >
-                  <Route path="/login" element={<Login />} />
-                </Route>
-              </Routes>
-              <RefineKbar />
-              <UnsavedChangesNotifier />
-              <DocumentTitleHandler />
-            </Refine>
+                }}
+              >
+                <AppRoutes />
+                <RefineKbar />
+                <UnsavedChangesNotifier />
+                <DocumentTitleHandler />
+              </Refine>
+            </div>
           </AntdApp>
         </ColorModeContextProvider>
       </RefineKbarProvider>

@@ -37,7 +37,6 @@ export const ShowCourse: React.FC = () => {
   const go = useGo();
   const {
     resource,
-    pathname,
     id,
   } = useParsed();
 

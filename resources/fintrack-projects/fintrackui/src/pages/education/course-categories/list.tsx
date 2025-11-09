@@ -1,4 +1,4 @@
-import { BaseRecord, HttpError } from "@refinedev/core";
+import { BaseRecord, HttpError, useGo, useParsed } from "@refinedev/core";
 import React from "react";
 
 import { Create, DeleteButton, EditButton, List, useDrawerForm, useTable } from "@refinedev/antd";
@@ -9,7 +9,7 @@ import { EditCourseCategory } from "./edit";
 
 export const CourseCategoryList: React.FC = () => {
   const { tableProps } = useTable<HttpError>();
-
+  
   const { formProps: createFormProps, drawerProps: createDrawerProps, show: createShow, saveButtonProps: createSaveButtonProps } = useDrawerForm<HttpError>({
     action: "create",
   });
@@ -31,7 +31,11 @@ export const CourseCategoryList: React.FC = () => {
         <Table {...tableProps} rowKey="id">
           <Table.Column dataIndex="name" title="Name" />
           <Table.Column dataIndex="description" title="Description" />
-          <Table.Column dataIndex="createdAt" title="Created at" />
+          <Table.Column 
+            dataIndex="createdAt" 
+            title="Created at" 
+            render={(text) => new Date(text).toLocaleString()}
+          />
           <Table.Column
             title={"Actions"}
             dataIndex="actions"

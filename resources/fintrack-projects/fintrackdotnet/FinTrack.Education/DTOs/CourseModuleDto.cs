@@ -1,8 +1,8 @@
 namespace FinTrack.Education.DTOs;
 
-public class CourseModuleCreateDto
+public class CourseModuleDto
 {
-    public Guid CourseId { get; set; }
+    public Guid ModuleId { get; set; }
     public string Name { get; set; } = null!;
     public int OrderIndex { get; set; }
     public List<CourseLessonDto> Lessons { get; set; } = null!;

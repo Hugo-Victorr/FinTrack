@@ -9,11 +9,12 @@ public class EducationProfile : Profile
     public EducationProfile()
     {
         CreateMap<Course, CourseDto>();
-        CreateMap<Course, CourseDetailsDto>();
+        CreateMap<Course, CourseDetailsDto>()
+            .ForMember(dest => dest.Modules, opt => opt.Ignore());
         CreateMap<CourseLessonDto, CourseLesson>();
 
         CreateMap<CourseCreateDto, Course>();
-        CreateMap<CourseModuleCreateDto, CourseModule>();
+        CreateMap<CourseModuleDto, CourseModule>();
         CreateMap<CourseUpdateDto, Course>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());

@@ -1,21 +1,33 @@
 import { PlayCircleOutlined } from "@ant-design/icons";
 import { DeleteButton, EditButton, List, ShowButton, useDrawerForm, useTable } from "@refinedev/antd";
-import { BaseRecord, HttpError } from "@refinedev/core";
+import { BaseKey, BaseRecord, HttpError, useGo, useParsed } from "@refinedev/core";
 import { Button, Col, Row, Space, Table, Tabs } from "antd";
 import { useState } from "react";
 import { CreateCourse } from "./create";
 
 export const ListCourse = () => {
-  const [activeKey, setActiveKey] = useState("1");
+  const [activeKey, setActiveKey] = useState("2");
 
-  const { 
-      formProps: createFormProps, 
-      drawerProps: createDrawerProps, 
-      show: createShow, 
-      saveButtonProps: createSaveButtonProps 
-    } = useDrawerForm<HttpError>({
+  const {
+    formProps: createFormProps,
+    drawerProps: createDrawerProps,
+    show: createShow,
+    saveButtonProps: createSaveButtonProps
+  } = useDrawerForm<HttpError>({
     action: "create",
   });
+
+  const go = useGo();
+  const {
+    resource,
+  } = useParsed();
+
+  const handleStartOrContinue = (id?: BaseKey) => {
+    go({
+      to: `/${resource!.name}/watch/${id}`,
+      type: "push",
+    });
+  };
 
   const { tableProps } = useTable({
     filters: {
@@ -41,7 +53,7 @@ export const ListCourse = () => {
             <ShowButton hideText size="small" recordItemId={record.id} />
             <EditButton hideText size="small" recordItemId={record.id} />
             <DeleteButton hideText size="small" recordItemId={record.id} />
-            <Button icon={<PlayCircleOutlined />} />
+            <Button icon={<PlayCircleOutlined />} onClick={() => handleStartOrContinue(record.id)} />
           </Space>
         )}
       />
@@ -49,32 +61,30 @@ export const ListCourse = () => {
   )
 
   return (
-    <div>
-      <List
-        canCreate
-        createButtonProps={{
-          onClick: () => {
-            createShow();
-          },
-        }}
-      >
-        <Tabs
-          tabPosition="left"
-          activeKey={activeKey}
-          onChange={setActiveKey}
-          style={{ height: "100%" }}
-          items={[{
-            label: "Available courses",
-            key: "2",
-            children: <CourseTable />
-          },
-          {
-            label: "My courses",
-            key: "1",
-          }]}
-        />
-        <CreateCourse drawerProps={createDrawerProps} formProps={createFormProps} saveButtonProps={createSaveButtonProps}/>
-      </List>
-    </div>
+    <List
+      canCreate
+      createButtonProps={{
+        onClick: () => {
+          createShow();
+        },
+      }}
+    >
+      <Tabs
+        tabPosition="left"
+        activeKey={activeKey}
+        onChange={setActiveKey}
+        style={{ height: "100%" }}
+        items={[{
+          label: "Available courses",
+          key: "2",
+          children: <CourseTable />
+        },
+        {
+          label: "My courses",
+          key: "1",
+        }]}
+      />
+      <CreateCourse drawerProps={createDrawerProps} formProps={createFormProps} saveButtonProps={createSaveButtonProps} />
+    </List>
   );
 }

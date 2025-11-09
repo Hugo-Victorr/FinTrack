@@ -45,7 +45,7 @@ public class CourseService
         CourseDetailsDto? res = _mapper.Map<CourseDetailsDto>(entity);
 
         if (includeLessons)
-            res.CourseContent = GetLessonsDto(entity);
+            res.Modules = GetLessonsDto(entity);
 
         return res;
     }
@@ -56,18 +56,6 @@ public class CourseService
         await _courseRepository.AddAsync(entity);
         // await unitOfWork.CommitAsync();
         return _mapper.Map<CourseDto>(entity);
-    }
-
-    public async Task<bool> AddModuleAsync(CourseModuleCreateDto dto)
-    {
-        var course = await _courseRepository.FindAsync(dto.CourseId);
-        if (course is null)
-            return false;
-
-        var module = _mapper.Map<CourseModule>(dto);
-        await _courseModuleRepository.AddAsync(module);
-
-        return true;
     }
 
     public async Task<CourseDto?> UpdateAsync(Guid id, CourseUpdateDto dto)

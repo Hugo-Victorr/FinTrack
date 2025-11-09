@@ -30,7 +30,6 @@ export const authProvider: AuthProvider = {
     }
   },
   onError: async (error) => {
-    console.error(error);
     return { error };
   },
   check: async () => {
@@ -66,7 +65,10 @@ export const authProvider: AuthProvider = {
       };
     }
   },
-  getPermissions: async () => null,
+  getPermissions: async () => {
+    console.warn(keycloak?.tokenParsed)
+    return null;
+  },
   getIdentity: async () => {
     if (keycloak?.tokenParsed) {
       return {

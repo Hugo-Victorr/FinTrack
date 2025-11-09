@@ -15,7 +15,8 @@ export const CreateCourse: React.FC<CourseFormProps> = ({
 }) => {
 
   const { selectProps } = useSelect({
-    resource: "coursecategories",
+    resource: "coursecategory",
+    optionLabel: "name"
   });
 
   return (
@@ -67,7 +68,7 @@ export const CreateCourse: React.FC<CourseFormProps> = ({
             <Input />
           </Form.Item>
           <Form.Item
-            label="level"
+            label="Level"
             name="level"
           >
             <CourseLevelSelect />

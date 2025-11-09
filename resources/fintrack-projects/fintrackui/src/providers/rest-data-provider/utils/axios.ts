@@ -6,7 +6,6 @@ const axiosInstance = axios.create();
 
 axiosInstance.interceptors.request.use(async (config) => {
   if (keycloak?.tokenParsed) {
-    console.log(keycloak?.tokenParsed)
     config.headers.Authorization = `Bearer ${keycloak.token}`;
 
     // Validation only
@@ -21,10 +20,23 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    const errors = error.response?.data?.errors;
+    
+    const normalizedErrors =2
+      errors && typeof errors === "object"
+        ? Object.fromEntries(
+            Object.entries(errors).map(([key, value]) => [
+              key.charAt(0).toLowerCase() + key.slice(1),
+              value,
+            ])
+          )
+        : errors;
+
     const customError: HttpError = {
       ...error,
       message: error.response?.data?.message,
       statusCode: error.response?.status,
+      errors: normalizedErrors
     };
 
     return Promise.reject(customError);

@@ -11,11 +11,11 @@ namespace Fintrack.Education.Controllers;
 [Authorize]
 public class ProgressController(ProgressService _progressService) : ControllerBase
 {
-    [HttpGet]
-    public async Task<IActionResult> GetCourseProgress()
-    {
-        return Ok();
-    }
+    // [HttpGet]
+    // public async Task<IActionResult> GetCourseProgress()
+    // {
+    //     return Ok();
+    // }
 
     [HttpGet("{courseId:guid}/lessons")]
     public async Task<IActionResult> GetLessonsProgression(Guid courseId)

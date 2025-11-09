@@ -17,5 +17,5 @@ public class CourseDetailsDto
     public int DurationMinutes { get; set; }
     public int LessonsLength { get; set; }
 
-    public List<CourseContentDto>? CourseContent { get; set; }
+    public List<CourseContentDto>? Modules { get; set; }
 }

@@ -33,16 +33,6 @@ public class CourseController(CourseService _courseService) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpPost("/module")]
-    public async Task<IActionResult> AddModule([FromBody] CourseModuleCreateDto dto)
-    {
-        if (await _courseService.AddModuleAsync(dto))
-        return StatusCode(StatusCodes.Status201Created);
-
-        // TODO: informar mensagem de erro
-        return BadRequest();
-    }
-
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CourseUpdateDto dto)
     {

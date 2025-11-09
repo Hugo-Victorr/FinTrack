@@ -213,7 +213,6 @@ export const ThemedSider: React.FC<RefineThemedLayoutSiderProps> = ({
         >
           <Layout>
             <Layout.Sider
-              defaultCollapsed={true}
               style={{
                 height: "100vh",
                 backgroundColor: token.colorBgContainer,
