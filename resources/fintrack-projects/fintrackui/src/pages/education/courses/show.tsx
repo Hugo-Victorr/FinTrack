@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Card, Row, Col, Button, Typography, Descriptions, Progress, Space } from "antd";
-import { PlayCircleOutlined, ArrowRightOutlined } from "@ant-design/icons";
-import { useGo, useOne, useParsed, useShow } from "@refinedev/core";
 import { ListButton, Show } from "@refinedev/antd";
+import { useGo, useParsed, useShow } from "@refinedev/core";
+import { Button, Card, Col, Descriptions, Row, Space, Typography } from "antd";
+import React from "react";
 import { CourseLevelTag } from "../../../components/course/levelTag";
 import { ICourse } from "./types";
 

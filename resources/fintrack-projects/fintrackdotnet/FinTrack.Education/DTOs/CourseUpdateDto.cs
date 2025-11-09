@@ -9,5 +9,5 @@ public record CourseUpdateDto(
     Guid CategoryId,
     bool IsPublished,
     CourseLevel Level,
-    List<CourseModuleDto> Modules
+    List<CourseContentDto> Modules
 );

@@ -13,12 +13,13 @@ export interface ICourse {
   level: number;
   durationMinutes: number;
   category: ICourseCategory;
-  courseContent: ICourseLesson[];
+  modules: ICourseLesson[];
 }
 
 export interface ICourseLesson {
   title: string;
-  key: string; // unique string key for React & tracking
+  order: number;
+  id: string; // unique string key for React & tracking
   videoUrl: string;
   children?: ICourseLesson[];
 }

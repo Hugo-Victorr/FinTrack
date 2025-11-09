@@ -85,7 +85,7 @@ public class CourseService
 
         foreach (CourseModule module in course.Modules.OrderBy(k => k.OrderIndex))
         {
-            CourseContentDto mod = new CourseContentDto(module.Name, module.OrderIndex, module.Id);
+            CourseContentDto mod = new CourseContentDto(module.Title, module.OrderIndex, module.Id);
 
             foreach (CourseLesson lesson in module.Lessons.OrderBy(k => k.Order))
             {

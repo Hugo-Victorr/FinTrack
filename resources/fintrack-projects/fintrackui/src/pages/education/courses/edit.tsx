@@ -190,7 +190,7 @@ export const EditCourse = () => {
 
                 {/* Nest Form.List */}
                 <Form.Item label="Lessons">
-                  <Form.List name={[field.name, 'children']}>
+                  <Form.List name={[field.name, 'lessons']}>
                     {(subFields, subOpt) => (
                       <div style={{ display: 'flex', flexDirection: 'column', rowGap: 16 }}>
                         {subFields.map((subField) => (

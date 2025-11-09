@@ -5,35 +5,39 @@ namespace FinTrack.Education.DTOs;
 public class CourseContentDto
 {
     public string Title { get; set; } = null!;
-    public string Key { get; set; }
+    public string Id { get; set; }
+    public int Order { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? VideoUrl { get; set; } = null!;
 
-    private int ModuleKey { get; set; }
-
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public List<CourseContentDto>? Children { get; }
+    public List<CourseContentDto>? Lessons { get; set; }
+
+    public CourseContentDto()
+    {
+    }    
 
     // Module
     public CourseContentDto(string title, int moduleIdx, Guid id)
     {
-        Title = string.Format("{0}. {1}", moduleIdx, title);
-        ModuleKey = moduleIdx;
-        Children = [];
-        Key = id.ToString();
+        Title = title;
+        Order = moduleIdx;
+        Lessons = [];
+        Id = id.ToString();
     }
 
     // Lesson
-    public CourseContentDto(string title, int lessonIdx, int moduleIdx, string videoUrl, Guid id)
+    public CourseContentDto(string title, int lessonIdx, string videoUrl, Guid id)
     {
-        Title = string.Format("{0}.{1} - {2}", lessonIdx, moduleIdx, title);
+        Title = title;
+        Order = lessonIdx;
         VideoUrl = videoUrl;
-        Key = id.ToString();
+        Id = id.ToString();
     }
 
     public void AddLessonToModule(string title, int idx, string videoUrl, Guid id)
     {
-        this.Children!.Add(new CourseContentDto(title, idx, this.ModuleKey, videoUrl, id));
+        Lessons!.Add(new CourseContentDto(title, idx, videoUrl, id));
     }
 }

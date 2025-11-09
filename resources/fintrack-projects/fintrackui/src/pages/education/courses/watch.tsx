@@ -37,7 +37,7 @@ export const WatchCourse: React.FC = () => {
   });
 
   const course = data?.data;
-  const lessons = course?.courseContent ?? [];
+  const lessons = course?.modules ?? [];
 
   const { query: { data: progData, isLoading: progIsLoading } } = useCustom({
     method: "get",
@@ -60,20 +60,20 @@ export const WatchCourse: React.FC = () => {
 
       if (!firstSection || !firstLesson) return;
 
-      const newExpandedKeys = [firstSection.key];
+      const newExpandedKeys = [firstSection.id];
       setExpandedKeys(newExpandedKeys);
       setSelectedLesson(firstLesson);
     } else {
-
+      
     }
-
+    
     setLoadingLessonTree(false);
   }, [progress]);
 
 
   // === Handle user lesson selection from the tree ===
   const onSelect = (_keys: React.Key[], info: any) => {
-    if (info.node.videoUrl && info.node.key !== selectedLesson!.key) {
+    if (info.node.videoUrl && info.node.key !== selectedLesson!.id) {
       setSelectedLesson(info.node);
       setLoadingVideo(true);
     }
@@ -105,18 +105,18 @@ export const WatchCourse: React.FC = () => {
                 <DirectoryTree
                   showIcon={false}
                   treeData={lessons.map(section => ({
-                    title: section.title,
-                    key: section.key,
+                    title: `${section.order}. ${section.title}`,
+                    key: section.id,
                     children:
                       section.children?.map(lesson => ({
-                        title: lesson.title,
-                        key: lesson.key,
+                        title: `${section.order}.${lesson.order} - ${lesson.title}`,
+                        key: lesson.id,
                         videoUrl: lesson.videoUrl,
                       })) ?? [],
                   }))}
                   onSelect={onSelect}
                   defaultExpandedKeys={expandedKeys}
-                  selectedKeys={selectedLesson ? [selectedLesson.key] : []}
+                  selectedKeys={selectedLesson ? [selectedLesson.id] : []}
                 />
             }
           </Card>

@@ -18,6 +18,8 @@ public class EducationProfile : Profile
         CreateMap<CourseUpdateDto, Course>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+        CreateMap<CourseContentDto, CourseModule>();
+        CreateMap<CourseContentDto, CourseLesson>();
 
         CreateMap<CourseCategory, CourseCategoryDto>();
 
