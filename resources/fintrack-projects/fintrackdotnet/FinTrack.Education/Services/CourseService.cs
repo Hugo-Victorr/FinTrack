@@ -60,7 +60,7 @@ public class CourseService
 
     public async Task<CourseDto?> UpdateAsync(Guid id, CourseUpdateDto dto)
     {
-        var entity = await _courseRepository.FindAsync(id);
+        var entity = await _courseRepository.GetCourseComplete(id);
         if (entity is null) return null;
 
         _mapper.Map(dto, entity);

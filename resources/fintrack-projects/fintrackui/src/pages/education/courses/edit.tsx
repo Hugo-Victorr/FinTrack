@@ -59,7 +59,33 @@ export const EditCourse = () => {
     optionLabel: "name"
   });
 
-  const CourseMetadata = () => {
+  return (
+    <Edit saveButtonProps={saveButtonProps} isLoading={courseIsLoading || catIsLoading}>
+      <Form
+        {...formProps}
+        layout="vertical"
+        autoComplete="off"
+      >
+        <Tabs
+          items={[
+            {
+              key: "1",
+              label: "Metadata",
+              children: <CourseMetadata />
+            },
+            {
+              key: "2",
+              label: "Lessons",
+              children: <CourseLessons />
+            }
+          ]}
+        />
+      </Form>
+    </Edit>
+  );
+}
+
+const CourseMetadata = ({selectProps, catData}) => {
     return (
       <Row gutter={[32, 24]}>
         <Col xs={24} sm={24} md={12}>
@@ -228,29 +254,3 @@ export const EditCourse = () => {
       </Form.List>
     );
   };
-
-  return (
-    <Edit saveButtonProps={saveButtonProps} isLoading={courseIsLoading || catIsLoading}>
-      <Form
-        {...formProps}
-        layout="vertical"
-        autoComplete="off"
-      >
-        <Tabs
-          items={[
-            {
-              key: "1",
-              label: "Metadata",
-              children: <CourseMetadata />
-            },
-            {
-              key: "2",
-              label: "Lessons",
-              children: <CourseLessons />
-            }
-          ]}
-        />
-      </Form>
-    </Edit>
-  );
-}

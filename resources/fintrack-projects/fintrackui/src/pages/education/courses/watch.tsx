@@ -100,13 +100,14 @@ export const WatchCourse: React.FC = () => {
           <Card title="Lessons">
             {
               loadingLessonTree ?
-                <Spin></Spin>
+                <Spin/>
                 :
                 <DirectoryTree
                   showIcon={false}
                   treeData={lessons.map(section => ({
                     title: `${section.order}. ${section.title}`,
                     key: section.id,
+                    icon: "@",
                     children:
                       section.children?.map(lesson => ({
                         title: `${section.order}.${lesson.order} - ${lesson.title}`,
