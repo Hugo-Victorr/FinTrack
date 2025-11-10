@@ -1,47 +1,61 @@
+# FinTrack
+
+## TODO
+
 * [ ] FASE 1 — Ambiente local
 
   * [ ] Instalar Terraform e AWS CLI
   * [ ] Criar arquivo .env central
   * [x] Criar estrutura inicial do repositório
-  * [ ] Configurar docker-compose.yml
+  * [x] Configurar docker-compose.yml
 
-* [ ] FASE 2 — Autenticação local (Keycloak + Google)
+* [ ] FASE 2 — Autenticação (Keycloak + Google)
 
-  * [ ] Adicionar Keycloak no docker-compose.yml
-  * [ ] Criar realm `myapp`
-  * [ ] Criar clients `frontend-client` e `gateway-client`
-  * [ ] Criar roles básicas (user, admin)
-  * [ ] Registrar app no Google Cloud Console
-  * [ ] Criar credenciais OAuth2
-  * [ ] Adicionar redirect URI no Keycloak
+  * [x] Adicionar Keycloak no docker-compose.yml
+  * [x] Criar realm `fintrack`
+  * [x] Criar clients `frontend-client` e `gateway-client`
+  * [ ] Criar roles básicas (user, manager, admin)
+  * [ ] Adicionar theme
+  * [ ] Integração com e-mails (AWS SES)
+  * [ ] Configurar event listener (sincronia usuários com aplicação)
   * [ ] Adicionar Identity Provider Google
-  * [ ] Testar login via Google
+  * [ ] Exportar configuração
 
 * [ ] FASE 3 — Backend (ASP.NET microservices)
 
-  * [ ] Criar template de microserviço
-  * [ ] Adicionar Serilog, Swagger e Health checks
+  * [x] Criar template de microserviço
+  * [ ] Controle de acesso com [Authorize]
+  * [ ] Adicionar Serilog, Swagger (+docs) e Health checks
   * [ ] Criar Dockerfile para cada serviço
-  * [ ] Criar middleware para claims
-  * [ ] Adicionar Postgres no docker-compose.yml
-  * [ ] Criar migrations e seeds
-  * [ ] Conectar microserviços ao banco
-  * [ ] Implementar serviço de usuários
+  * [x] Criar middleware para claims
+  * [x] Adicionar Postgres no docker-compose.yml
+  * [x] Criar migrations e seeds
+  * [x] Conectar microserviços ao banco
   * [ ] Integrar com API do Keycloak
   * [ ] Implementar endpoint `/me`
+  * [ ] Feature: gestão de usuários
+  * [ ] Feature: cursos + progresso
+  * [ ] Feature: movimentações financeiras
+  * [ ] Feature: cadastro de objetivos
+  * [ ] Feature: integração com mock api Open Finance (scraping job)
+  * [ ] Feature: exportação de dados/relatórios
+  * [ ] Feature: central de ações (?)
+  * [ ] Feature: integração com investimentos (scraping job ações) + dashboard
+  * [ ] Feature: notificações com SQS + Telegram / E-mail
 
 * [ ] FASE 4 — Frontend (Refine + Keycloak + Google)
 
-  * [ ] Criar app Refine
-  * [ ] Instalar @react-keycloak/web
-  * [ ] Configurar provider Keycloak
-  * [ ] Implementar login/logout
-  * [ ] Configurar fetch com Authorization header
-  * [ ] Testar integração com backend
+  * [x] Criar app Refine
+  * [x] Instalar @react-keycloak/web
+  * [x] Configurar provider Keycloak
+  * [x] Implementar login/logout
+  * [x] Configurar fetch com Authorization header
+  * [x] Testar integração com backend
+  * [ ] Criar dashboard
+  * [ ] Implementar tela de preferências
 
 * [ ] FASE 5 — Infraestrutura AWS (via Terraform)
 
-  * [ ] Criar arquivos main.tf, variables.tf, outputs.tf
   * [ ] Definir backend remoto (S3 + DynamoDB)
   * [ ] Criar módulos Terraform (vpc, ecs, rds, api_gateway, keycloak)
   * [ ] Provisionar VPC e sub-redes
@@ -61,7 +75,6 @@
 
   * [ ] Configurar GitHub Actions / GitLab CI
   * [ ] Criar workflow de build e push para ECR
-  * [ ] Criar workflow de terraform apply automatizado
   * [ ] Configurar deploy automático no ECS
 
 * [ ] FASE 7 — Observabilidade e refinamento
@@ -71,6 +84,7 @@
   * [ ] Implementar tracing com OpenTelemetry
   * [ ] Revisar CORS e expiração dos tokens
   * [ ] Habilitar HTTPS everywhere
+  * [ ] Habilitar criptografia everywhere
 
 * [ ] FASE 8 — Go-Live
 
@@ -80,3 +94,8 @@
   * [ ] Testar login via Google
   * [ ] Testar fluxo completo (Refine → Gateway → microserviço)
   * [ ] Fazer smoke tests e métricas iniciais
+
+* [ ] FASE 9 - Integração Langchain
+
+  * [ ] Implementar Q&A
+  * [ ] Implementar ações via REST API
