@@ -1,5 +1,5 @@
-using FinTrack.Model.Enums;
 using FinTrack.Model.DTO;
+using FinTrack.Model.Enums;
 
 namespace FinTrack.Model.Entities
 {
@@ -10,9 +10,6 @@ namespace FinTrack.Model.Entities
         public double Amount { get; set; } = 0;
         public CurrencyType Currency { get; set; } = CurrencyType.USD;
         public WalletType WalletCategory { get; set; } = WalletType.Cash;
-
-
-        //public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
         public void AddAmount(double amount)
         {

@@ -21,6 +21,23 @@ namespace FinTrack.Database.Configuration
             .IsRequired();
 
             builder
+                .HasOne(x => x.ExpenseCategory)
+                .WithMany()
+                .HasForeignKey(x => x.ExpenseCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder
+            .Property(x => x.WalletId)
+            .HasColumnName("wallet_id")
+            .IsRequired();
+
+            builder
+                .HasOne(x => x.Wallet)
+                .WithMany()
+                .HasForeignKey(x => x.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder
             .Property(x => x.Amount)
             .HasColumnName("amount")
             .IsRequired();
@@ -33,10 +50,9 @@ namespace FinTrack.Database.Configuration
             .IsRequired();
 
             builder
-                .HasOne(x => x.ExpenseCategory)
-                .WithMany()
-                .HasForeignKey(x => x.ExpenseCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+            .Property(x => x.OperationType)
+            .HasColumnName("operation_type")
+            .IsRequired();
         }
     }
 }
