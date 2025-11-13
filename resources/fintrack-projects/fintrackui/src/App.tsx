@@ -38,7 +38,7 @@ function App() {
     if (initialized) {
       const timer = setTimeout(() => {
         setReady(true);
-      }, 0);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [initialized]);
