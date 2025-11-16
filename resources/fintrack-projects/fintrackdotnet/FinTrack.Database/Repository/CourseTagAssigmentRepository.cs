@@ -1,0 +1,22 @@
+using FinTrack.Database.EFDao;
+using FinTrack.Database.Repository;
+using FinTrack.Model.Entities;
+
+namespace FinTrack.Database.Interfaces;
+
+public class CourseTagAssigmentRepository : BaseDao<CourseTagAssignment>, ICourseTagAssigmentRepository
+{
+    public CourseTagAssigmentRepository(FintrackDbContext context) : base(context)
+    {
+    }
+
+    protected override Task ValidateEntityForInsert(params CourseTagAssignment[] obj)
+    {
+        return Task.CompletedTask;
+    }
+
+    protected override Task ValidateEntityForUpdate(params CourseTagAssignment[] obj)
+    {
+        return Task.CompletedTask;
+    }
+}
