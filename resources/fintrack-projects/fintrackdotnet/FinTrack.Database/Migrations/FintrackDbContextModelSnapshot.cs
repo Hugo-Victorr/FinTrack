@@ -406,6 +406,10 @@ namespace FinTrack.Database.Migrations
                         .HasColumnName("expense_date")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<int>("OperationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("operation_type");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("updated_at");
@@ -413,6 +417,10 @@ namespace FinTrack.Database.Migrations
                     b.Property<Guid>("User")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wallet_id");
 
                     b.HasKey("Id");
 
@@ -425,6 +433,8 @@ namespace FinTrack.Database.Migrations
                     b.HasIndex("UpdatedAt");
 
                     b.HasIndex("User");
+
+                    b.HasIndex("WalletId");
 
                     b.ToTable("expense", (string)null);
                 });
@@ -499,7 +509,7 @@ namespace FinTrack.Database.Migrations
                     b.Property<int>("Currency")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(1)
+                        .HasDefaultValue(0)
                         .HasColumnName("currency");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -527,7 +537,7 @@ namespace FinTrack.Database.Migrations
                     b.Property<int>("WalletCategory")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(1)
+                        .HasDefaultValue(0)
                         .HasColumnName("wallet_category");
 
                     b.HasKey("Id");
@@ -636,7 +646,15 @@ namespace FinTrack.Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FinTrack.Model.Entities.Wallet", "Wallet")
+                        .WithMany()
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("ExpenseCategory");
+
+                    b.Navigation("Wallet");
                 });
 
             modelBuilder.Entity("FinTrack.Model.Entities.Course", b =>

@@ -1,4 +1,5 @@
 using FinTrack.Model.DTO;
+using FinTrack.Model.Enums;
 
 namespace FinTrack.Model.Entities
 {
@@ -9,11 +10,9 @@ namespace FinTrack.Model.Entities
         public ExpenseCategory ExpenseCategory { get; set; }
         public double Amount { get; set; }
         public DateTime ExpenseDate { get; set; }
-        public Guid Id { get; set; } = Guid.NewGuid();
-        public DateTime CreatedAt { get; set; } = DateTime.Now.ToLocalTime();
-        public DateTime? DeletedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public Guid User { get; set; }
+        public OperationTypeEnum OperationType { get; set; } = OperationTypeEnum.Expense;
+        public Guid WalletId { get; set; }
+        public Wallet Wallet { get; set; }
 
         public Expense() : base() { }
 

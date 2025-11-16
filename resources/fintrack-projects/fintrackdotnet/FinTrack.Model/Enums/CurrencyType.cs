@@ -2,11 +2,11 @@
 {
     public enum CurrencyType
     {
-        USD = 1,  // US Dollar
-        BRL = 2,  // Brazilian Real
-        EUR = 3,  // Euro
-        GBP = 4,  // British Pound
-        JPY = 5,  // Japanese Yen
+        USD = 0,  // US Dollar
+        BRL = 1,  // Brazilian Real
+        EUR = 2,  // Euro
+        GBP = 3,  // British Pound
+        JPY = 4,  // Japanese Yen
     }
 }
 
