@@ -11,7 +11,7 @@ import {
   Spin,
 } from "antd";
 import { ListButton, Show } from "@refinedev/antd";
-import { useApiUrl, useCustom, useGo, useOne, useParsed, useShow } from "@refinedev/core";
+import { HttpError, useApiUrl, useCustom, useGo, useOne, useParsed, useShow } from "@refinedev/core";
 import ReactPlayer from "react-player";
 import { ICourse, ICourseLesson } from "./types";
 
@@ -19,7 +19,7 @@ const { Title } = Typography;
 const { DirectoryTree } = Tree;
 
 export const WatchCourse: React.FC = () => {
-  const { id } = useParsed();
+  const { id, resource } = useParsed();
   const go = useGo();
   const apiUrl = useApiUrl();
 
@@ -28,12 +28,22 @@ export const WatchCourse: React.FC = () => {
   const [loadingVideo, setLoadingVideo] = useState(false);
   const [loadingLessonTree, setLoadingLessonTree] = useState(true);
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const [presignedUrl, setPresignedUrl] = useState();
 
   // === Load course and lessons ===
   const { query: { isLoading: courseIsLoading, data } } = useShow<ICourse>({
     resource: "course",
     id,
     meta: { headers: { "x-include-lessons": "true" } },
+  });
+
+  const { refetch } = useCustom<HttpError>({
+    method: "get",
+    url: `${apiUrl}/${resource?.name}/play?key=${id}/${selectedLesson?.videoUrl}`,
+    queryOptions: {
+      enabled: false,
+      retry: 0,
+    },
   });
 
   const course = data?.data;
@@ -72,10 +82,12 @@ export const WatchCourse: React.FC = () => {
 
 
   // === Handle user lesson selection from the tree ===
-  const onSelect = (_keys: React.Key[], info: any) => {
+  const onSelect = async (_keys: React.Key[], info: any) => {
     if (info.node.videoUrl && info.node.key !== selectedLesson!.id) {
       setSelectedLesson(info.node);
       setLoadingVideo(true);
+      const res = await refetch();
+      setPresignedUrl(res.url);
     }
   };
 

@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FinTrack.Database\FinTrack.Database.csproj" />
     <ProjectReference Include="..\FinTrack.Model\FinTrack.Model.csproj" />
+    <ProjectReference Include="..\FinTrack.Infrastructure\FinTrack.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

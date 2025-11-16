@@ -1,8 +1,8 @@
 using FinTrack.Database.EFDao;
 using FinTrack.Education.DTOs;
 using FinTrack.Education.Services;
+using FinTrack.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fintrack.Education.Controllers;
@@ -10,7 +10,7 @@ namespace Fintrack.Education.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class CourseController(CourseService _courseService) : ControllerBase
+public class CourseController(CourseService _courseService, IStorageService _storage) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] QueryOptions opts)
@@ -27,6 +27,7 @@ public class CourseController(CourseService _courseService) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "manager,admin")]
     public async Task<IActionResult> Create([FromBody] CourseCreateDto dto)
     {
         var result = await _courseService.CreateAsync(dto);
@@ -34,6 +35,7 @@ public class CourseController(CourseService _courseService) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "manager,admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CourseUpdateDto dto)
     {
         var result = await _courseService.UpdateAsync(id, dto);
@@ -41,9 +43,25 @@ public class CourseController(CourseService _courseService) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "manager,admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var success = await _courseService.DeleteAsync(id);
         return success ? NoContent() : NotFound();
+    }
+
+    [HttpPost("upload")]
+    [Authorize(Roles = "manager,admin")]
+    public async Task<IActionResult> GetUploadUrl([FromBody] UploadRequest req)
+    {
+        var url = await _storage.GenerateUploadUrl(req.Key, TimeSpan.FromMinutes(10));
+        return Ok(new { url });
+    }
+
+    [HttpGet("play")]
+    public IActionResult GetPlaybackUrl([FromQuery] string key)
+    {
+        var url = _storage.GenerateDownloadUrl(key, TimeSpan.FromHours(1));
+        return Ok(new { url });
     }
 }

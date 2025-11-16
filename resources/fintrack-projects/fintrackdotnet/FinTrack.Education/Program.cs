@@ -1,12 +1,18 @@
+using Amazon;
+using Amazon.S3;
 using FinTrack.Database;
 using FinTrack.Database.Interfaces;
 using FinTrack.Database.Migrations;
 using FinTrack.Education.Middlewares;
 using FinTrack.Education.Services;
+using FinTrack.Infrastructure.DTO;
+using FinTrack.Infrastructure.Interfaces;
+using FinTrack.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
 
 // Add services to the container.
 
@@ -33,7 +39,14 @@ builder.Services.AddDbContext<FintrackDbContext>(options =>
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddTransient<IStartupFilter, MigrationStartupFilter<FintrackDbContext>>();
 
-// Add AutoMapper
+// Register strongly typed settings
+builder.Services.Configure<AwsStorageSettings>(builder.Configuration.GetSection("AWS:Storage"));
+
+// Register clients
+builder.Services.AddSingleton<IAmazonS3>(_ =>
+        new AmazonS3Client(RegionEndpoint.GetBySystemName(config["AWS:Region"])));
+
+// Register AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Register Unit of Work
@@ -54,6 +67,7 @@ builder.Services.AddScoped<ICourseTagRepository, CourseTagRepository>();
 builder.Services.AddScoped<CourseService>();
 builder.Services.AddScoped<CourseCategoryService>();
 builder.Services.AddScoped<ProgressService>();
+builder.Services.AddScoped<IStorageService, S3StorageService>();
 
 var app = builder.Build();
 

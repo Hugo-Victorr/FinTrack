@@ -1,15 +1,48 @@
-import { ThemedLayout, ThemedSider } from "@refinedev/antd"
-import { Authenticated, CanAccess, ErrorComponent, ResourceProps } from "@refinedev/core"
-import { CatchAllNavigate, NavigateToResource } from "@refinedev/react-router"
-import { Result } from "antd"
-import { Routes, Route, Link, Outlet } from "react-router"
-import { Header } from "../components"
-import { CourseCategoryList } from "../pages/education/course-categories"
-import { ListCourse, EditCourse, ShowCourse, WatchCourse } from "../pages/education/courses"
-import { Login } from "../pages/login"
-import { BookOutlined } from "@ant-design/icons"
+import { ThemedLayout, ThemedSider } from "@refinedev/antd";
+import {
+  Authenticated,
+  CanAccess,
+  ErrorComponent,
+  ResourceProps,
+} from "@refinedev/core";
+import { CatchAllNavigate, NavigateToResource } from "@refinedev/react-router";
+import { Result } from "antd";
+import { Routes, Route, Link, Outlet } from "react-router";
+import { Header } from "../components";
+import { CourseCategoryList } from "../pages/education/course-categories";
+import {
+  ListCourse,
+  EditCourse,
+  ShowCourse,
+  WatchCourse,
+} from "../pages/education/courses";
+import { Login } from "../pages/login";
+import { AreaChartOutlined, BookOutlined, DashboardOutlined, DollarOutlined } from "@ant-design/icons";
+import FinanceDashboard from "../pages/dashboard";
 
 export const appResources: ResourceProps[] = [
+  {
+    name: "dashboard",
+    list: "/dashboard",
+    meta: {
+      icon: <DashboardOutlined />,
+      canDelete: false,
+    },
+  },
+  {
+    name: "transactions",
+    list: "/transactions",
+    meta: {
+      icon: <DollarOutlined />,
+    },
+  },
+  {
+    name: "investiments",
+    list: "/investiments",
+    meta: {
+      icon: <AreaChartOutlined />,
+    }
+  },
   {
     name: "course",
     list: "/course",
@@ -28,7 +61,7 @@ export const appResources: ResourceProps[] = [
     edit: "/coursecategory/edit/:id",
     meta: {
       canDelete: true,
-      label: "Course categories"
+      label: "Course categories",
     },
   },
 ];
@@ -63,6 +96,8 @@ export const AppRoutes = () => {
           </Authenticated>
         }
       >
+        <Route index element={<FinanceDashboard />} />
+        <Route path="/dashboard" element={<FinanceDashboard />} />
         <Route path="/course">
           <Route index element={<ListCourse />} />
           <Route path="edit/:id" element={<EditCourse />} />
@@ -76,10 +111,7 @@ export const AppRoutes = () => {
       </Route>
       <Route
         element={
-          <Authenticated
-            key="authenticated-outer"
-            fallback={<Outlet />}
-          >
+          <Authenticated key="authenticated-outer" fallback={<Outlet />}>
             <NavigateToResource />
           </Authenticated>
         }
@@ -88,4 +120,4 @@ export const AppRoutes = () => {
       </Route>
     </Routes>
   );
-}
+};
