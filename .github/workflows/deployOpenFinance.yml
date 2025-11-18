@@ -9,7 +9,7 @@ on:
 env:
   PROJECT_PATH: resources/fintrack-projects/OpenFinanceAPI/OpenFinanceAPI.csproj
   APP_DLL_NAME: OpenFinanceAPI.dll
-  DEPLOY_PATH: /home/ec2-user/openfinance
+  DEPLOY_PATH:  ${{ secrets.DEPLOY_PATH }}
   PUBLISH_DIR: main-app
   RUN_PORT: 5005
 
@@ -21,8 +21,10 @@ jobs:
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: Publish
       run: dotnet publish $PROJECT_PATH -c Release -o $PUBLISH_DIR
+
     - name: Deploy files
       if: github.event_name == 'push'
       uses: appleboy/scp-action@v0.1.7
@@ -32,6 +34,7 @@ jobs:
         key: ${{ secrets.AWS_EC2_SSH_KEY }}
         source: "${{ env.PUBLISH_DIR }}/*"
         target: ${{ env.DEPLOY_PATH }}
+
     - name: Restart
       if: github.event_name == 'push'
       uses: appleboy/ssh-action@v1.0.3
@@ -42,5 +45,7 @@ jobs:
         script: |
           mkdir -p ${{ env.DEPLOY_PATH }}
           cd ${{ env.DEPLOY_PATH }}
+          echo "Diretório de Deploy: $(pwd)"
           pkill -f "dotnet ${{ env.APP_DLL_NAME }}" || true
-          nohup dotnet ${{ env.APP_DLL_NAME }} --urls http://0.0.0.0:${{ env.RUN_PORT }} > app.log 2>&1 &
+          echo "Diretório de Deploy: $(pwd)"
+          dotnet ${{ env.APP_DLL_NAME }}
