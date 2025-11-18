@@ -3,24 +3,42 @@
 on:
   push:
     branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
 env:
   PROJECT_PATH: resources/fintrack-projects/OpenFinanceAPI/OpenFinanceAPI.csproj
   APP_DLL_NAME: OpenFinanceAPI.dll
   DEPLOY_PATH: /home/ec2-user/openfinance
   PUBLISH_DIR: publish
+  RUN_PORT: 5005
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: Publish
       run: dotnet publish $PROJECT_PATH -c Release -o $PUBLISH_DIR
+
+    - name: Run API locally (smoke test)
+      run: |
+        nohup dotnet $PUBLISH_DIR/$APP_DLL_NAME --urls http://localhost:$RUN_PORT > api.log 2>&1 &
+        for i in {1..15}; do
+          sleep 1
+          if curl -s http://localhost:$RUN_PORT/weatherforecast >/dev/null 2>&1; then echo "API responded"; break; fi
+          echo "Waiting for API ($i)";
+        done
+        curl -s -o /dev/null -w '%{http_code}\n' http://localhost:$RUN_PORT/weatherforecast | grep -E '200|404' || { echo "Smoke test failed"; cat api.log; exit 1; }
+        pkill -f "dotnet $APP_DLL_NAME" || true
+
     - name: Copy artifacts
+      if: github.event_name == 'push'
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
@@ -28,7 +46,9 @@ jobs:
         key: ${{ secrets.AWS_EC2_SSH_KEY }}
         source: "$PUBLISH_DIR/*"
         target: ${{ env.DEPLOY_PATH }}
-    - name: Restart app
+
+    - name: Restart app (remote)
+      if: github.event_name == 'push'
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
@@ -38,4 +58,4 @@ jobs:
           mkdir -p ${{ env.DEPLOY_PATH }}
           cd ${{ env.DEPLOY_PATH }}
           pkill -f "dotnet ${{ env.APP_DLL_NAME }}" || true
-          nohup dotnet ${{ env.APP_DLL_NAME }} > app.log 2>&1 &
+          nohup dotnet ${{ env.APP_DLL_NAME }} --urls http://0.0.0.0:${{ env.RUN_PORT }} > app.log 2>&1 &
