@@ -47,5 +47,5 @@ jobs:
           cd ${{ env.DEPLOY_PATH }}
           echo "Diretório de Deploy: $(pwd)"
           pkill -f "dotnet ${{ env.APP_DLL_NAME }}" || true
-          echo "Diretório de Deploy: $(pwd)"
+          echo "Diretório de Start: $(pwd)"
           dotnet ${{ env.APP_DLL_NAME }}
