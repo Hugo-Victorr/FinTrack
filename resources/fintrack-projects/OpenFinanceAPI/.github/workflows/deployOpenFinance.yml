@@ -3,9 +3,10 @@
 on:
   push:
     branches:
-      - develop
+      - main
   pull_request:
     branches:
+      - main
       - develop
 
 env:
@@ -14,9 +15,9 @@ env:
   PROJECT_PATH: OpenFinanceAPI/OpenFinanceAPI.csproj 
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+  deploy:
+    name: Build and Deploy OpenFinance
+    runs-on : ubuntu-latest
 
     steps:
     - name: Checkout Code
@@ -26,67 +27,110 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-        
+
     - name: Restore dependencies
-      run: dotnet restore ${{ env.PROJECT_PATH }}
+      run: dotnet restore
 
-    - name: Build and Test (CI)
-      run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
+    - name: Copy files with SSH
+      uses: easingthemes/ssh-deploy@develop
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
+        ARGS: -r --delete
+        SOURCE: "./"
+        REMOTE_HOST: ${{ secrets.AWS_EC2_HOST }}
+        REMOTE_USER: ${{ secrets.AWS_EC2_USER }}
+        TARGET: ${{ env.DEPLOY_PATH }}
+
+
+# name: pull-request-and-deploy-openFinance
+
+# on:
+#   push:
+#     branches:
+#       - develop
+#   pull_request:
+#     branches:
+#       - develop
+
+# env:
+#   DEPLOY_PATH: /var/www/openFinance/
+#   APP_DLL_NAME: OpenFinanceAPI.dll
+#   PROJECT_PATH: OpenFinanceAPI/OpenFinanceAPI.csproj 
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     if: github.event_name == 'push' && github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+
+#     steps:
+#     - name: Checkout Code
+#       uses: actions/checkout@v4
+
+#     - name: Setup .NET 8 SDK
+#       uses: actions/setup-dotnet@v4
+#       with:
+#         dotnet-version: '8.0.x'
+        
+#     - name: Restore dependencies
+#       run: dotnet restore ${{ env.PROJECT_PATH }}
+
+#     - name: Build and Test (CI)
+#       run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
       
-    #- name: Run Tests
-     #run: dotnet test ${{ env.PROJECT_PATH }} --no-build --verbosity normal
+#     - name: Run Tests
+#      run: dotnet test ${{ env.PROJECT_PATH }} --no-build --verbosity normal
 
-    - name: Publish (Create Deployment Artifact)
-      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ${{ github.workspace }}/publish
+#     - name: Publish (Create Deployment Artifact)
+#       run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ${{ github.workspace }}/publish
 
-    - name: Deploy to EC2 via SSH
-      if: github.event_name == 'push'
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_SSH_KEY }}
-        script: |
-          DEST_DIR="${{ env.DEPLOY_PATH }}"
-          DLL_NAME="${{ env.APP_DLL_NAME }}"
+#     - name: Deploy to EC2 via SSH
+#       if: github.event_name == 'push'
+#       uses: appleboy/ssh-action@v1.0.3
+#       with:
+#         host: ${{ secrets.AWS_EC2_HOST }}
+#         username: ${{ secrets.AWS_EC2_USER }}
+#         key: ${{ secrets.AWS_EC2_SSH_KEY }}
+#         script: |
+#           DEST_DIR="${{ env.DEPLOY_PATH }}"
+#           DLL_NAME="${{ env.APP_DLL_NAME }}"
           
-          echo "Stopping existing application..."
-          is_running=$(ps aux | grep "dotnet $DLL_NAME" | grep -v grep | awk '{print $2}')
-          if [ -n "$is_running" ]; then
-            kill -9 $is_running
-            echo "Application stopped (PID: $is_running)."
-          else
-            echo "Application not running or process not found."
-          fi
+#           echo "Stopping existing application..."
+#           is_running=$(ps aux | grep "dotnet $DLL_NAME" | grep -v grep | awk '{print $2}')
+#           if [ -n "$is_running" ]; then
+#             kill -9 $is_running
+#             echo "Application stopped (PID: $is_running)."
+#           else
+#             echo "Application not running or process not found."
+#           fi
           
-          mkdir -p $DEST_DIR
-          chown -R ${{ secrets.AWS_EC2_USER }}:${{ secrets.AWS_EC2_USER }} $DEST_DIR
+#           mkdir -p $DEST_DIR
+#           chown -R ${{ secrets.AWS_EC2_USER }}:${{ secrets.AWS_EC2_USER }} $DEST_DIR
           
-          echo "Deployment folder ready: $DEST_DIR"
+#           echo "Deployment folder ready: $DEST_DIR"
 
-    - name: Transfer Files to EC2 (SCP)
-      if: github.event_name == 'push'
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_SSH_KEY }}
-        source: "publish/*"
-        target: ${{ env.DEPLOY_PATH }}
-        strip_components: 1
+#     - name: Transfer Files to EC2 (SCP)
+#       if: github.event_name == 'push'
+#       uses: appleboy/scp-action@v0.1.7
+#       with:
+#         host: ${{ secrets.AWS_EC2_HOST }}
+#         username: ${{ secrets.AWS_EC2_USER }}
+#         key: ${{ secrets.AWS_EC2_SSH_KEY }}
+#         source: "publish/*"
+#         target: ${{ env.DEPLOY_PATH }}
+#         strip_components: 1
 
-    - name: Start Application (Remote SSH Command)
-      if: github.event_name == 'push'
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_SSH_KEY }}
-        script: |
-          echo "Starting new application..."
-          cd ${{ env.DEPLOY_PATH }}
-          nohup dotnet ${{ env.APP_DLL_NAME }} > /dev/null 2>&1 &
-          echo "Application started in background."
+#     - name: Start Application (Remote SSH Command)
+#       if: github.event_name == 'push'
+#       uses: appleboy/ssh-action@v1.0.3
+#       with:
+#         host: ${{ secrets.AWS_EC2_HOST }}
+#         username: ${{ secrets.AWS_EC2_USER }}
+#         key: ${{ secrets.AWS_EC2_SSH_KEY }}
+#         script: |
+#           echo "Starting new application..."
+#           cd ${{ env.DEPLOY_PATH }}
+#           nohup dotnet ${{ env.APP_DLL_NAME }} > /dev/null 2>&1 &
+#           echo "Application started in background."
           
-          sleep 5
-          ps aux | grep "dotnet ${{ env.APP_DLL_NAME }}" | grep -v grep
+#           sleep 5
+#           ps aux | grep "dotnet ${{ env.APP_DLL_NAME }}" | grep -v grep
