@@ -7,7 +7,7 @@ on:
 env:
   PROJECT_PATH: resources/fintrack-projects/OpenFinanceAPI/OpenFinanceAPI.csproj
   APP_DLL_NAME: OpenFinanceAPI.dll
-  DEPLOY_PATH: "/home/ec2-user"
+  DEPLOY_PATH: /home/ec2-user/openfinance
   PUBLISH_DIR: publish
 
 jobs:
@@ -15,52 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
-    - name: Debug repo layout
-      run: |
-        echo "Repo root: $(pwd)" 
-        ls -1
-        echo "Looking for csproj:"; find . -maxdepth 4 -name '*.csproj'
-
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-
-    - name: Restore
-      run: dotnet restore ${{ env.PROJECT_PATH }}
-
     - name: Publish
-      run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ${{ env.PUBLISH_DIR }} --no-restore
-
-    - name: List publish output
-      run: |
-        echo "Contents of ${{ env.PUBLISH_DIR }}:" 
-        ls -l ${{ env.PUBLISH_DIR }} || echo "Publish dir missing" 
-        test -f ${{ env.PUBLISH_DIR }}/${{ env.APP_DLL_NAME }} || { echo "DLL not found, failing"; exit 1; }
-
-    - name: Transfer files
+      run: dotnet publish $PROJECT_PATH -c Release -o $PUBLISH_DIR
+    - name: Copy artifacts
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
         username: ${{ secrets.AWS_EC2_USER }}
         key: ${{ secrets.AWS_EC2_SSH_KEY }}
-        source: "${{ env.PUBLISH_DIR }}/*"
+        source: "$PUBLISH_DIR/*"
         target: ${{ env.DEPLOY_PATH }}
-
-    - name: Start app
+    - name: Restart app
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
         username: ${{ secrets.AWS_EC2_USER }}
         key: ${{ secrets.AWS_EC2_SSH_KEY }}
         script: |
-          set -e
+          mkdir -p ${{ env.DEPLOY_PATH }}
           cd ${{ env.DEPLOY_PATH }}
-          echo "Files in deploy path:"; ls -l
-          echo "Dotnet runtime version:"; dotnet --info || echo "dotnet not found"
-          echo "Stopping previous instance..."
           pkill -f "dotnet ${{ env.APP_DLL_NAME }}" || true
-          echo "Starting application..."
           nohup dotnet ${{ env.APP_DLL_NAME }} > app.log 2>&1 &
-          sleep 4
-          if pgrep -fa "dotnet ${{ env.APP_DLL_NAME }}"; then echo "App started"; else echo "App failed"; tail -n 200 app.log; exit 1; fi
