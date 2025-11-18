@@ -36,7 +36,7 @@ jobs:
       run: |
         echo "Contents of ${{ env.PUBLISH_DIR }}:" 
         ls -l ${{ env.PUBLISH_DIR }} || echo "Publish dir missing" 
-        test -f ${{ env.PUBLISH_DIR }}/$APP_DLL_NAME || { echo "DLL not found, failing"; exit 1; }
+        test -f ${{ env.PUBLISH_DIR }}/${{ env.APP_DLL_NAME }} || { echo "DLL not found, failing"; exit 1; }
 
     - name: Transfer files
       uses: appleboy/scp-action@v0.1.7
@@ -54,8 +54,13 @@ jobs:
         username: ${{ secrets.AWS_EC2_USER }}
         key: ${{ secrets.AWS_EC2_SSH_KEY }}
         script: |
+          set -e
           cd ${{ env.DEPLOY_PATH }}
-          pkill -f "dotnet $APP_DLL_NAME" || true
-          nohup dotnet $APP_DLL_NAME > app.log 2>&1 &
-          sleep 3
-          if pgrep -fa "dotnet $APP_DLL_NAME"; then echo "App started"; else echo "App failed"; tail -n 100 app.log; fi
+          echo "Files in deploy path:"; ls -l
+          echo "Dotnet runtime version:"; dotnet --info || echo "dotnet not found"
+          echo "Stopping previous instance..."
+          pkill -f "dotnet ${{ env.APP_DLL_NAME }}" || true
+          echo "Starting application..."
+          nohup dotnet ${{ env.APP_DLL_NAME }} > app.log 2>&1 &
+          sleep 4
+          if pgrep -fa "dotnet ${{ env.APP_DLL_NAME }}"; then echo "App started"; else echo "App failed"; tail -n 200 app.log; exit 1; fi
