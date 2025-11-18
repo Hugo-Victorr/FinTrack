@@ -1,0 +1,49 @@
+﻿name: deploy-openFinance
+
+on:
+  push:
+    branches: [ main, develop ]
+
+env:
+  PROJECT_PATH: resources/fintrack-projects/OpenFinanceAPI/OpenFinanceAPI.csproj
+  APP_DLL_NAME: OpenFinanceAPI.dll
+  DEPLOY_PATH: "/home/ec2-user"
+  PUBLISH_DIR: publish
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore
+      run: dotnet restore $PROJECT_PATH
+
+    - name: Publish
+      run: dotnet publish $PROJECT_PATH -c Release -o $PUBLISH_DIR --no-restore
+
+    - name: Transfer files
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_SSH_KEY }}
+        source: "$PUBLISH_DIR/*"
+        target: ${{ env.DEPLOY_PATH }}
+
+    - name: Start app
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_SSH_KEY }}
+        script: |
+          cd ${{ env.DEPLOY_PATH }}
+          pkill -f "dotnet $APP_DLL_NAME" || true
+          nohup dotnet $APP_DLL_NAME > app.log 2>&1 &
+          sleep 3
+          pgrep -fa "dotnet $APP_DLL_NAME" || tail -n 100 app.log
