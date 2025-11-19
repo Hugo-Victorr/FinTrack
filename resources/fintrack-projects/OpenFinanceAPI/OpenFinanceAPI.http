@@ -1,6 +1,0 @@
-@OpenFinanceAPI_HostAddress = http://localhost:5182
-
-GET {{OpenFinanceAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

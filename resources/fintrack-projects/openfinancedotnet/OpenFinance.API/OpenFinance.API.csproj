@@ -4,18 +4,19 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>e064319e-91f3-4aec-ad72-2298af11ad91</UserSecretsId>
+    <UserSecretsId>1ff86673-fba9-458a-8ae3-796ae131d584</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include=".github\workflows\deployOpenFinance.yml" />
+    <ProjectReference Include="..\OpenFinance.Model\OpenFinance.Model.csproj" />
   </ItemGroup>
 
 </Project>
