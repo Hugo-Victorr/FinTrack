@@ -1,0 +1,281 @@
+# Guia de Configuração: Pipeline CI/CD para AWS EC2
+
+## ?? Pré-requisitos
+
+### 1. Contas e Serviços
+- Docker Hub (ou ECR da AWS)
+- GitHub com repositório
+- AWS EC2 instance com Docker e Docker Compose instalados
+
+### 2. Instalar Docker na EC2
+
+```bash
+# Conectar na EC2
+ssh -i seu-key.pem ec2-user@seu-ec2-ip
+
+# Instalar Docker
+sudo yum update -y
+sudo yum install -y docker
+sudo usermod -aG docker ec2-user
+
+# Instalar Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Iniciar serviço
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Verificar instalação
+docker --version
+docker-compose --version
+
+# Logout e login para aplicar permissões
+exit
+ssh -i seu-key.pem ec2-user@seu-ec2-ip
+```
+
+## ?? Configurar Secrets no GitHub
+
+Vá para: **Settings ? Secrets and variables ? Actions ? New repository secret**
+
+Adicione os seguintes secrets:
+
+```
+DOCKER_USERNAME          = seu-usuario-docker
+DOCKER_PASSWORD          = seu-token-docker
+EC2_HOST                 = xxx.xxx.xxx.xxx (IP da sua EC2)
+EC2_USER                 = ec2-user (ou ubuntu para Ubuntu AMI)
+EC2_SSH_KEY              = (conteúdo da sua chave .pem)
+EC2_KEY_NAME             = seu-key (nome da chave, sem .pem)
+```
+
+### ?? Gerando Token Docker
+1. Vá para https://hub.docker.com/settings/security
+2. Create New Token
+3. Copie o token para usar como `DOCKER_PASSWORD`
+
+## ?? Estrutura de Arquivos
+
+```
+repositorio/
+??? .github/
+?   ??? workflows/
+?       ??? build-and-deploy.yml          # ? Pipeline CI/CD
+??? dockerfiles/
+?   ??? fintrack.dockerfile               # FinTrack.Expenses
+?   ??? fintrack-education.dockerfile     # FinTrack.Education
+?   ??? openfinance.dockerfile            # OpenFinance.API
+??? docker-compose-prod.yml               # Produção (sem build)
+??? docker-compose-full.yml               # Local + Produção
+??? scripts/
+?   ??? deploy.sh                         # Script de deploy manual
+??? resources/
+    ??? fintrack-projects/fintrackdotnet/
+    ??? openfinance-projects/openfinancedotnet/
+```
+
+## ?? Como Usar
+
+### Opção 1: Automático (Recomendado)
+1. Faça push para `main` ou `develop`
+2. GitHub Actions faz build, push e deploy automaticamente
+3. Monitor em: **Actions ? build-and-deploy**
+
+### Opção 2: Manual na EC2
+
+```bash
+# SSH na EC2
+ssh -i seu-key.pem ec2-user@seu-ec2-ip
+
+# Download e executa script
+mkdir -p ~/fintrack-deployment
+cd ~/fintrack-deployment
+
+# Copiar docker-compose
+cp docker-compose-prod.yml .
+
+# Variáveis de ambiente
+export DOCKER_USERNAME="seu-usuario"
+export DOCKER_PASSWORD="seu-token"
+export IMAGE_TAG="latest"
+
+# Deploy
+docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+docker-compose -f docker-compose-prod.yml pull
+docker-compose -f docker-compose-prod.yml up -d
+
+# Verificar
+docker-compose ps
+curl http://localhost:8001/health  # FinTrack Expenses
+curl http://localhost:8002/health  # FinTrack Education
+curl http://localhost:8003/health  # OpenFinance API
+```
+
+### Opção 3: Deploy via GitHub CLI
+
+```bash
+# Trigger manual
+gh workflow run build-and-deploy.yml --ref main
+
+# Ver logs
+gh run list
+gh run view <run-id> --log
+```
+
+## ?? Arquitetura do Pipeline
+
+```
+???????????????????
+? Push para main  ?
+???????????????????
+         ?
+         ?
+????????????????????????
+? GitHub Actions Start ?
+????????????????????????
+         ?
+         ?
+????????????????????????????????????????????
+? Build Matrix (3 serviços em paralelo)    ?
+????????????????????????????????????????????
+? 1. fintrack-expenses                     ?
+? 2. fintrack-education                    ?
+? 3. openfinance-api                       ?
+????????????????????????????????????????????
+         ?
+         ?
+????????????????????????????????????????????
+? Push para Docker Hub (se main/develop)   ?
+????????????????????????????????????????????
+         ?
+         ?
+????????????????????????????????????????????
+? SSH na EC2                               ?
+????????????????????????????????????????????
+         ?
+         ?
+????????????????????????????????????????????
+? Docker Compose Pull & Restart            ?
+????????????????????????????????????????????
+         ?
+         ?
+????????????????????????????????????????????
+? ? Apis rodando em produção              ?
+????????????????????????????????????????????
+```
+
+## ?? Monitoramento
+
+### Ver logs em tempo real
+```bash
+# Na EC2
+docker-compose logs -f fintrack-expenses
+docker-compose logs -f fintrack-education
+docker-compose logs -f openfinance-api
+
+# Ver histórico
+docker-compose logs --tail=50 fintrack-expenses
+```
+
+### Health checks
+```bash
+curl http://localhost:8001/health
+curl http://localhost:8002/health
+curl http://localhost:8003/health
+```
+
+### Status dos containers
+```bash
+docker-compose ps
+docker stats  # CPU, memória em tempo real
+```
+
+## ??? Troubleshooting
+
+### Imagens não fazem pull
+```bash
+# Verificar credenciais
+docker login -u seu-usuario
+
+# Limpar cache
+docker system prune -a
+
+# Fazer pull manual
+docker pull seu-usuario/fintrack-expenses:latest
+```
+
+### Container não inicia
+```bash
+# Ver logs completos
+docker logs fintrack-expenses
+
+# Verificar healthcheck
+docker inspect fintrack-expenses --format='{{.State.Health.Status}}'
+
+# Restartar
+docker restart fintrack-expenses
+```
+
+### Erro de conexão com banco
+```bash
+# Verificar PostgreSQL
+docker logs fintrack-postgres
+
+# Testar conexão
+docker exec fintrack-postgres psql -U fintrack -d fintrackDb -c "SELECT 1"
+
+# Reiniciar postgres + apis
+docker-compose down
+docker-compose up -d
+```
+
+## ?? Variáveis de Ambiente Importantes
+
+Editar `.env` na EC2:
+
+```env
+# Docker Registry
+DOCKER_REGISTRY=docker.io
+DOCKER_USERNAME=seu-usuario
+
+# Database
+DB_NAME=fintrackDb
+DB_USER=fintrack
+DB_PASSWORD=seu-password-seguro
+
+# Application
+ASPNETCORE_ENVIRONMENT=Production
+IMAGE_TAG=latest
+```
+
+## ?? Atualizações
+
+Quando quiser fazer deploy de uma nova versão:
+
+```bash
+# Opção 1: Push code e deixar GitHub Actions fazer tudo
+git push origin main
+
+# Opção 2: Trigger manual
+gh workflow run build-and-deploy.yml --ref main
+
+# Opção 3: Na EC2, puxar última versão
+cd ~/fintrack-deployment
+docker-compose pull
+docker-compose up -d
+```
+
+## ?? Próximos Passos (Opcional)
+
+- [ ] Configurar HTTPS com Let's Encrypt
+- [ ] Usar AWS ECR em vez de Docker Hub
+- [ ] Adicionar CI/CD para database migrations
+- [ ] Implementar rollback automático
+- [ ] Adicionar alertas (CloudWatch, PagerDuty)
+- [ ] Configurar load balancer (ALB)
+- [ ] Auto-scaling com ECS/Fargate
+
+---
+
+**Pronto! Seu pipeline está configurado e pronto para usar! ??**

@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: fintrack-postgres
+    environment:
+      POSTGRES_DB: fintrackDb
+      POSTGRES_USER: fintrack
+      POSTGRES_PASSWORD: fintrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  fintrack-expenses:
+    image: ${DOCKER_REGISTRY}/fintrack-expenses:${IMAGE_TAG:-latest}
+    container_name: fintrack-expenses
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=fintrackDb;User Id=fintrack;Password=fintrack;"
+    ports:
+      - "8001:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  fintrack-education:
+    image: ${DOCKER_REGISTRY}/fintrack-education:${IMAGE_TAG:-latest}
+    container_name: fintrack-education
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=fintrackDb;User Id=fintrack;Password=fintrack;"
+    ports:
+      - "8002:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  openfinance-api:
+    image: ${DOCKER_REGISTRY}/openfinance-api:${IMAGE_TAG:-latest}
+    container_name: openfinance-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=openfinanceDb;User Id=fintrack;Password=fintrack;"
+    ports:
+      - "8003:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
