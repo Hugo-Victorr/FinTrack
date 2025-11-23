@@ -76,9 +76,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: SSH into EC2 and deploy
-        uses: 
+        
       - name: Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.AWS_EC2_HOST }}
@@ -87,8 +85,6 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
-
-        
 
         run: |
           mkdir -p ~/.ssh
