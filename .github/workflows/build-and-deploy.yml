@@ -84,12 +84,13 @@ jobs:
           echo "${{ secrets.AWS_FESA_EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_rsa ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} cd ~/fintrack-deployment || mkdir -p ~/fintrack-deployment && cd ~/fintrack-deployment
     
           #Conexão e Execução
           ssh -i ~/.ssh/id_rsa ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
             # set -e
       
-            cd ~/fintrack-deployment || mkdir -p ~/fintrack-deployment && cd ~/fintrack-deployment
+            # cd ~/fintrack-deployment || mkdir -p ~/fintrack-deployment && cd ~/fintrack-deployment
       
             #Baixar o docker-compose.yml
             echo "Downloading docker-compose file..."
