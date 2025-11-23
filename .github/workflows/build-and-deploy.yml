@@ -94,25 +94,52 @@ jobs:
           
           ssh -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
             set -e
+
+            echo "================================"
             echo "Deploying FinTrack applications..."
+            echo "================================"
             
-            cd ~/fintrack-deployment || mkdir -p ~/fintrack-deployment && cd ~/fintrack-deployment
+            # Criar diretório de deployment
+            DEPLOY_DIR="$HOME/fintrack-deployment"
+            mkdir -p "$DEPLOY_DIR"
+            cd "$DEPLOY_DIR" || { echo "Failed to create deployment directory"; exit 1; }
             
             # Download docker-compose file
+            echo "Downloading docker-compose configuration..."
             wget -q -O docker-compose.yml https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose-prod.yml
+
+            if [ ! -f docker-compose.yml ]; then
+              echo "? Failed to download docker-compose.yml"
+              exit 1
+            fi
+            
+            echo "? docker-compose.yml downloaded"
             
             # Login to Docker
+            echo "Logging in to Docker Hub..."
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
             
             # Pull and restart services
+            echo "Pulling latest images..."
             docker-compose pull
-            docker-compose down
+            
+            echo "Stopping old containers..."
+            docker-compose down 2>/dev/null || true
+            
+            echo "Starting services..."
             docker-compose up -d
-            
+
             # Cleanup
-            docker logout
+            docker logout 2>/dev/null || true
             
-            echo "Deployment completed successfully!"
+            echo ""
+            echo "================================"
+            echo "? Deployment completed successfully!"
+            echo "================================"
+            echo ""
             echo "Services running:"
             docker-compose ps
+            echo ""
+            echo "Health check:"
+            docker-compose ps --format "table {{.Service}}\t{{.Status}}"
           EOF
