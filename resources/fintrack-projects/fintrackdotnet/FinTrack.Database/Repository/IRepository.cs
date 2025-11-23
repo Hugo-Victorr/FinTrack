@@ -1,4 +1,6 @@
-﻿using FinTrack.Model;
+﻿using System.Linq.Expressions;
+using FinTrack.Database.EFDao;
+using FinTrack.Model;
 
 namespace FinTrack.Database.Repository
 {
@@ -11,11 +13,18 @@ namespace FinTrack.Database.Repository
         Task<List<TEntity>> AllAsync(bool track = false);
 
         /// <summary>
+        /// Get all entities async based on query filters
+        /// </summary>
+        /// <returns>Entities list</returns>
+        Task<List<TEntity>> AllAsync(QueryOptions options, bool track = false, params Expression<Func<TEntity, object>>[] includes);
+
+
+        /// <summary>
         /// Get an entity async by its primary key
         /// </summary>
         /// <param name="key">Primary key</param>
         /// <returns>Entity</returns>
-        Task<TEntity?> FindAsync(object key, bool track = false);
+        Task<TEntity?> FindAsync(object key, bool track = false, params Expression<Func<TEntity, object>>[] includes);
 
         /// <summary>
         /// Insert one or many entities async

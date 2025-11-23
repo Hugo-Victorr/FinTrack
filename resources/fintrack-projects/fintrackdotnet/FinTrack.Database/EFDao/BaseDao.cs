@@ -1,4 +1,6 @@
-﻿using FinTrack.Database.Repository;
+﻿using System.Linq.Expressions;
+using System.Reflection;
+using FinTrack.Database.Repository;
 using FinTrack.Model;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,6 +60,73 @@ namespace FinTrack.Database.EFDao
             return list;
         }
 
+        public virtual async Task<List<TEntity>> AllAsync(
+                QueryOptions options,
+                bool track = false,
+                params Expression<Func<TEntity, object>>[] includes)
+        {
+            DbSet<TEntity> dbSet = _context.Set<TEntity>();
+            IQueryable<TEntity> query = dbSet.Where(d => d.DeletedAt == null);
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            // Apply filters dynamically
+            if (options.Filters is not null && options.Filters.Count > 0)
+            {
+                foreach (var (key, value) in options.Filters)
+                {
+                    PropertyInfo? prop = typeof(TEntity).GetProperty(key, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                    if (prop is not null)
+                    {
+                        // Build expression: e => EF.Functions.Like(e.Property, "%value%")
+                        var parameter = Expression.Parameter(typeof(TEntity), "e");
+                        var property = Expression.Property(parameter, prop);
+                        var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
+                            nameof(DbFunctionsExtensions.Like),
+                            new[] { typeof(DbFunctions), typeof(string), typeof(string) }
+                        )!;
+                        var functions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
+                        var pattern = Expression.Constant($"%{value}%");
+                        var like = Expression.Call(likeMethod, functions, property, pattern);
+                        var lambda = Expression.Lambda<Func<TEntity, bool>>(like, parameter);
+                        query = query.Where(lambda);
+                    }
+                }
+            }
+
+            // Apply sorting dynamically
+            if (!string.IsNullOrWhiteSpace(options._Sort))
+            {
+                var prop = typeof(TEntity).GetProperty(options._Sort,
+                    BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null)
+                {
+                    var parameter = Expression.Parameter(typeof(TEntity), "e");
+                    var property = Expression.Property(parameter, prop);
+                    var keySelector = Expression.Lambda(property, parameter);
+
+                    if (options._Order != null && options._Order.Equals("desc", StringComparison.CurrentCultureIgnoreCase))
+                        query = Queryable.OrderByDescending(query, (dynamic)keySelector);
+                    else
+                        query = Queryable.OrderBy(query, (dynamic)keySelector);
+                }
+            }
+
+            // Apply pagination
+            if (options._Start.HasValue)
+                query = query.Skip(options._Start.Value);
+            if (options._End.HasValue)
+                query = query.Take(options._End.Value);
+
+            if (!track)
+                query = query.AsNoTracking();
+
+            return await query.ToListAsync();
+        }
+
         public virtual async Task<int> DeleteAsync(params TEntity[] obj)
         {
             DbSet<TEntity> dbSet = _context.Set<TEntity>();
@@ -91,18 +160,42 @@ namespace FinTrack.Database.EFDao
             return result;
         }
 
-        public virtual async Task<TEntity?> FindAsync(object key, bool track = false)
+        public virtual async Task<TEntity?> FindAsync(
+            object key,
+            bool track = false,
+            params Expression<Func<TEntity, object>>[] includes)
         {
             DbSet<TEntity> dbSet = _context.Set<TEntity>();
             IQueryable<TEntity> query = dbSet.Where(p => p.Id.Equals(key));
             if (!track)
                 query = query.AsNoTracking();
 
-            TEntity? entity = await query.FirstOrDefaultAsync();
-            if (entity == null || entity.DeletedAt != null)
+            TEntity? entity = null;
+
+            //if (key != null && _cache != null && !track)
+            //{
+            //    entity = _cache.GetEntity(key.ToString()!);
+            //    if (entity != null)
+            //        return entity;
+            //}
+
+            DbSet<TEntity> dbSet = _context.Set<TEntity>();
+            entity = track ?
+                await dbSet.FindAsync(key) :
+                await dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.Id.Equals(key));
+
+            IQueryable<TEntity> query = dbSet.Where(e => e.DeletedAt == null);
+
+            foreach (var include in includes)
             {
-                return null;
+                query = query.Include(include);
             }
+
+            if (!track)
+                query = query.AsNoTracking();
+
+            entity = await query.FirstOrDefaultAsync(e => e.Id.Equals(key));
+
             return entity;
         }
 
