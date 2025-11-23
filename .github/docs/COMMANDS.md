@@ -47,7 +47,7 @@ docker build -f ../../dockerfiles/fintrack.dockerfile -t fintrack-expenses:local
 docker build -f ../../dockerfiles/fintrack-education.dockerfile -t fintrack-education:local .
 
 # Build OpenFinance
-cd ../../../resources/openfinance-projects/openfinancedotnet
+cd ../../../resources/fintrack-projects/openfinancedotnet
 docker build -f ../../dockerfiles/openfinance.dockerfile -t openfinance-api:local .
 
 # Listar imagens locais

@@ -72,7 +72,7 @@ repositorio/
 ?   ??? deploy.sh                         # Script de deploy manual
 ??? resources/
     ??? fintrack-projects/fintrackdotnet/
-    ??? openfinance-projects/openfinancedotnet/
+    ??? fintrack-projects/openfinancedotnet/
 ```
 
 ## ?? Como Usar
