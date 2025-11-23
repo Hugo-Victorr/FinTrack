@@ -14,6 +14,7 @@ on:
 env:
   REGISTRY: docker.io
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   build-and-push:
@@ -85,4 +86,4 @@ jobs:
           ssh-keyscan -H ${{ secrets.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_rsa ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} "mkdir -p ~/fintrack-deployment"
           scp -i ~/.ssh/id_rsa docker-compose-full.yml ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:~/fintrack-deployment/docker-compose.yml
-          ssh -i ~/.ssh/id_rsa ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} "docker login -u '${{ secrets.DOCKER_USERNAME }}' -p '${{ secrets.DOCKER_PASSWORD }}' && cd ~/fintrack-deployment && docker-compose pull && docker-compose down || true && docker-compose up -d && docker logout"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} "docker login -u '${{ DOCKER_USERNAME }}' -p '${{ DOCKER_PASSWORD }}' && cd ~/fintrack-deployment && docker-compose pull && docker-compose down || true && docker-compose up -d && docker logout"
