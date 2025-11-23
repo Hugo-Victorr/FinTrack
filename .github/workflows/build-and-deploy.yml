@@ -106,7 +106,7 @@ jobs:
             docker-compose up -d
             
             docker logout
-          #EOF
+          EOF
 
           # mkdir -p ~/.ssh
           # echo "${{ secrets.AWS_EC2_SSH_KEY }}" > ~/.ssh/id_rsa
