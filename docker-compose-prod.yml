@@ -26,17 +26,17 @@ services:
       - postgres
     restart: unless-stopped
 
-  fintrack-education:
-    image: ${DOCKER_REGISTRY}/fintrack-education:${IMAGE_TAG:-latest}
-    container_name: fintrack-education
-    environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=fintrackDb;User Id=fintrack;Password=fintrack;"
-    ports:
-      - "8002:8080"
-    depends_on:
-      - postgres
-    restart: unless-stopped
+  # fintrack-education:
+  #   image: ${DOCKER_REGISTRY}/fintrack-education:${IMAGE_TAG:-latest}
+  #   container_name: fintrack-education
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Production
+  #     ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=fintrackDb;User Id=fintrack;Password=fintrack;"
+  #   ports:
+  #     - "8002:8080"
+  #   depends_on:
+  #     - postgres
+  #   restart: unless-stopped
 
   openfinance-api:
     image: ${DOCKER_REGISTRY}/openfinance-api:${IMAGE_TAG:-latest}
