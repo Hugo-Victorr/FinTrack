@@ -1,8 +1,8 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
-using FinTrack.Database.Repository;
+﻿using FinTrack.Database.Repository;
 using FinTrack.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace FinTrack.Database.EFDao
 {
@@ -165,10 +165,10 @@ namespace FinTrack.Database.EFDao
             bool track = false,
             params Expression<Func<TEntity, object>>[] includes)
         {
-            DbSet<TEntity> dbSet = _context.Set<TEntity>();
-            IQueryable<TEntity> query = dbSet.Where(p => p.Id.Equals(key));
-            if (!track)
-                query = query.AsNoTracking();
+            //DbSet<TEntity> dbSet = _context.Set<TEntity>();
+            //IQueryable<TEntity> query = dbSet.Where(p => p.Id.Equals(key));
+            //if (!track)
+            //    query = query.AsNoTracking();
 
             TEntity? entity = null;
 
