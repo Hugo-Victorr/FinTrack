@@ -2,12 +2,13 @@ using System.Linq.Expressions;
 using AutoMapper;
 using FinTrack.Database.EFDao;
 using FinTrack.Database.Interfaces;
+using FinTrack.Education.Contracts;
 using FinTrack.Education.DTOs;
 using FinTrack.Model.Entities;
 
 namespace FinTrack.Education.Services;
 
-public class CourseService
+public class CourseService : ICourseService
 {
     private readonly ICourseRepository _courseRepository;
     private readonly ICourseModuleRepository _courseModuleRepository;
@@ -20,14 +21,14 @@ public class CourseService
         _courseModuleRepository = courseModuleRepository;
     }
 
-    public async Task<IEnumerable<CourseDto>> GetAllAsync(QueryOptions opts)
+    public async Task<List<CourseDto>> GetAllAsync(QueryOptions opts)
     {
         var entities = await _courseRepository.AllAsync(
             opts,
             false,
             c => c.Category
         );
-        return _mapper.Map<IEnumerable<CourseDto>>(entities);
+        return _mapper.Map<List<CourseDto>>(entities);
     }
 
     public async Task<CourseDetailsDto?> GetByIdAsync(Guid id, bool includeLessons = false)

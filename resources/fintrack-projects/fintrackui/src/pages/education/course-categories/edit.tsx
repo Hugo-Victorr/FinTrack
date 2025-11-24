@@ -18,11 +18,8 @@ export const EditCourseCategory: React.FC<CourseCategoryFormProps> = ({
   return (
     <Drawer {...drawerProps}>
       <Edit saveButtonProps={saveButtonProps} recordItemId={id}>
-        <Form {...formProps} layout="vertical">
-          <Form.Item
-            label="ID"
-            name="id"
-          >
+        <Form {...formProps} layout="vertical" autoComplete="off">
+          <Form.Item label="ID" name="id">
             <Input disabled />
           </Form.Item>
           <Form.Item
@@ -36,10 +33,7 @@ export const EditCourseCategory: React.FC<CourseCategoryFormProps> = ({
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Description"
-            name="description"
-          >
+          <Form.Item label="Description" name="description">
             <Input />
           </Form.Item>
         </Form>

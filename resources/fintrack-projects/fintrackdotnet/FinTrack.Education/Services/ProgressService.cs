@@ -1,12 +1,13 @@
 using AutoMapper;
 using FinTrack.Database;
 using FinTrack.Database.Interfaces;
+using FinTrack.Education.Contracts;
 using FinTrack.Education.DTOs;
 using FinTrack.Model.Entities;
 
 namespace FinTrack.Education.Services;
 
-public class ProgressService
+public class ProgressService : IProgressService
 {
     private readonly FintrackDbContext _context;
     private readonly ICourseProgressRepository _courseProgressRepository;

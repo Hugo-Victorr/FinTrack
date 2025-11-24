@@ -1,69 +1,79 @@
-﻿using FinTrack.Database.Contracts;
-using FinTrack.Expenses.Contracts;
-using FinTrack.Model.DTO;
-using FinTrack.Model.Entities;
+﻿using AutoMapper;
+using FinTrack.Database.EFDao;
+using FinTrack.Database.Interfaces;
+using FinTrack.Expenses.DTOs;
 
-namespace FinTrack.Expenses.Services
+namespace FinTrack.Expenses.Services;
+
+public class WalletService
 {
-    public class WalletService(IWalletDao walletDao) : IWalletService
+    private readonly IWalletRepository _repository;
+    private readonly IMapper _mapper;
+
+    public WalletService(IWalletRepository repository, IMapper mapper)
     {
-        private readonly IWalletDao _dao = walletDao;
+        _repository = repository;
+        _mapper = mapper;
+    }
 
-        public async Task<List<WalletDTO>> AllAsync()
-        {
-            try
-            {
-                List<Wallet> preferences = await _dao.AllAsync();
+    public async Task<List<WalletDto>> GetAllAsync(QueryOptions opts, Guid userId)
+    {
+        opts.Filters ??= new Dictionary<string, string>();
+        opts.Filters["User"] = userId.ToString();
+        
+        var entities = await _repository.AllAsync(opts, false);
+        return _mapper.Map<List<WalletDto>>(entities);
+    }
 
-                return preferences.Select(x => new WalletDTO(x)).ToList();
-            }
-            catch (Exception ex)
-            {
-                string errorMsg = $"Erro ao consultar as preferências do portal";
-                //_logger.LogError(ex, errorMsg);
-                throw new Exception(errorMsg, ex);
-            }
-        }
+    public async Task<WalletDto?> GetByIdAsync(Guid id, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id);
+        if (entity is null) return null;
+        
+        if (entity.User != userId) return null; // Return null for security (don't reveal entity exists)
+        
+        return _mapper.Map<WalletDto>(entity);
+    }
 
-        public async Task<WalletDTO?> GetByIdAsync(Guid id)
-        {
-            Wallet? entity = await _dao.FindAsync(id);
-            return entity == null ? null : new WalletDTO(entity);
-        }
+    public async Task<WalletDto> CreateAsync(WalletCreateDto dto, Guid userId)
+    {
+        var entity = _mapper.Map<FinTrack.Model.Entities.Wallet>(dto);
+        entity.User = userId;
+        await _repository.AddAsync(entity);
+        return _mapper.Map<WalletDto>(entity);
+    }
 
-        public async Task<WalletDTO> CreateAsync(WalletDTO dto)
-        {
-            Wallet entity = dto.ToWallet();
-            await _dao.AddAsync(entity);
-            return new WalletDTO(entity);
-        }
+    public async Task<WalletDto?> UpdateAsync(Guid id, WalletUpdateDto dto, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id, true);
+        if (entity is null) return null;
+        
+        if (entity.User != userId) return null; // Return null for security (don't reveal entity exists)
 
-        public async Task<bool> UpdateAsync(Guid id, WalletDTO dto)
-        {
-            Wallet? existing = await _dao.FindAsync(id, track: true);
-            if (existing == null) return false;
-            existing.Name = dto.Name;
-            existing.Description = dto.Description;
-            existing.Amount = dto.Amount;
-            existing.Currency = dto.Currency;
-            existing.WalletCategory = dto.WalletCategory;
-            existing.User = dto.User;
-            int updated = await _dao.UpdateAsync(existing);
-            return updated > 0;
-        }
+        _mapper.Map(dto, entity);
+        await _repository.UpdateAsync(entity);
+        return _mapper.Map<WalletDto>(entity);
+    }
 
-        public async Task<bool> DeleteAsync(Guid id)
-        {
-            int deleted = await _dao.DeleteAsync(id);
-            return deleted > 0;
-        }
+    public async Task<bool> DeleteAsync(Guid id, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id);
+        if (entity is null) return false;
+        
+        if (entity.User != userId) return false; // Return false for security
 
-        public async Task<bool> RestoreAsync(Guid id)
-        {
-            Wallet? existing = await _dao.FindAsync(id, track: true);
-            if (existing == null) return false;
-            int restored = await _dao.RestoreAsync(existing);
-            return restored > 0;
-        }
+        await _repository.DeleteAsync(id);
+        return true;
+    }
+
+    public async Task<bool> RestoreAsync(Guid id, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id, true);
+        if (entity is null) return false;
+        
+        if (entity.User != userId) return false; // Return false for security
+        
+        await _repository.RestoreAsync(entity);
+        return true;
     }
 }

@@ -10,7 +10,6 @@ namespace FinTrack.Model.Entities
         public ExpenseCategory ExpenseCategory { get; set; }
         public double Amount { get; set; }
         public DateTime ExpenseDate { get; set; }
-        public OperationTypeEnum OperationType { get; set; } = OperationTypeEnum.Expense;
         public Guid WalletId { get; set; }
         public Wallet Wallet { get; set; }
 
@@ -29,7 +28,7 @@ namespace FinTrack.Model.Entities
             Description = expense.Description;
             ExpenseDate = expense.ExpenseDate;
             ExpenseCategoryId = expense.ExpenseCategoryId;
-            ExpenseCategory = expense.ExpenseCategory;
+            WalletId = expense.WalletId;
             Id = expense.Id;
             CreatedAt = expense.CreatedAt;
             UpdatedAt = expense.UpdatedAt;

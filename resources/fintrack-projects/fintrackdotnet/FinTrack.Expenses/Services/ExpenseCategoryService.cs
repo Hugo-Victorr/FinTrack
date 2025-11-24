@@ -1,56 +1,79 @@
-﻿using FinTrack.Database.Contracts;
-using FinTrack.Expenses.Contracts;
-using FinTrack.Model.DTO;
-using FinTrack.Model.Entities;
+﻿using AutoMapper;
+using FinTrack.Database.EFDao;
+using FinTrack.Database.Interfaces;
+using FinTrack.Expenses.DTOs;
 
-namespace FinTrack.Expenses.Services
+namespace FinTrack.Expenses.Services;
+
+public class ExpenseCategoryService
 {
-    public class ExpenseCategoryService(IExpenseCategoryDao expenseCategoryDao) : IExpenseCategoryService
+    private readonly IExpenseCategoryRepository _repository;
+    private readonly IMapper _mapper;
+
+    public ExpenseCategoryService(IExpenseCategoryRepository repository, IMapper mapper)
     {
-        private readonly IExpenseCategoryDao _dao = expenseCategoryDao;
+        _repository = repository;
+        _mapper = mapper;
+    }
 
-        public async Task<List<ExpenseCategoryDTO>> AllAsync()
-        {
-            List<ExpenseCategory> list = await _dao.AllAsync();
-            return list.Select(x => new ExpenseCategoryDTO(x)).ToList();
-        }
+    public async Task<List<ExpenseCategoryDto>> GetAllAsync(QueryOptions opts, Guid userId)
+    {
+        opts.Filters ??= new Dictionary<string, string>();
+        opts.Filters["User"] = userId.ToString();
+        
+        var entities = await _repository.AllAsync(opts, false);
+        return _mapper.Map<List<ExpenseCategoryDto>>(entities);
+    }
 
-        public async Task<ExpenseCategoryDTO?> GetByIdAsync(Guid id)
-        {
-            ExpenseCategory? entity = await _dao.FindAsync(id);
-            return entity == null ? null : new ExpenseCategoryDTO(entity);
-        }
+    public async Task<ExpenseCategoryDto?> GetByIdAsync(Guid id, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id);
+        if (entity is null) return null;
+        
+        if (entity.User != userId) return null; // Return null for security (don't reveal entity exists)
+        
+        return _mapper.Map<ExpenseCategoryDto>(entity);
+    }
 
-        public async Task<ExpenseCategoryDTO> CreateAsync(ExpenseCategoryDTO dto)
-        {
-            ExpenseCategory entity = dto.ToExpenseCategory();
-            await _dao.AddAsync(entity);
-            return new ExpenseCategoryDTO(entity);
-        }
+    public async Task<ExpenseCategoryDto> CreateAsync(ExpenseCategoryCreateDto dto, Guid userId)
+    {
+        var entity = _mapper.Map<FinTrack.Model.Entities.ExpenseCategory>(dto);
+        entity.User = userId;
+        await _repository.AddAsync(entity);
+        return _mapper.Map<ExpenseCategoryDto>(entity);
+    }
 
-        public async Task<bool> UpdateAsync(Guid id, ExpenseCategoryDTO dto)
-        {
-            ExpenseCategory? existing = await _dao.FindAsync(id, track: true);
-            if (existing == null) return false;
-            existing.Description = dto.Description;
-            existing.Color = dto.Color;
-            existing.User = dto.User;
-            int updated = await _dao.UpdateAsync(existing);
-            return updated > 0;
-        }
+    public async Task<ExpenseCategoryDto?> UpdateAsync(Guid id, ExpenseCategoryUpdateDto dto, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id, true);
+        if (entity is null) return null;
+        
+        if (entity.User != userId) return null; // Return null for security (don't reveal entity exists)
 
-        public async Task<bool> DeleteAsync(Guid id)
-        {
-            int deleted = await _dao.DeleteAsync(id);
-            return deleted > 0;
-        }
+        _mapper.Map(dto, entity);
+        await _repository.UpdateAsync(entity);
+        return _mapper.Map<ExpenseCategoryDto>(entity);
+    }
 
-        public async Task<bool> RestoreAsync(Guid id)
-        {
-            ExpenseCategory? existing = await _dao.FindAsync(id, track: true);
-            if (existing == null) return false;
-            int restored = await _dao.RestoreAsync(existing);
-            return restored > 0;
-        }
+    public async Task<bool> DeleteAsync(Guid id, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id);
+        if (entity is null) return false;
+        
+        if (entity.User != userId) return false; // Return false for security
+
+        await _repository.DeleteAsync(id);
+        return true;
+    }
+
+    public async Task<bool> RestoreAsync(Guid id, Guid userId)
+    {
+        var entity = await _repository.FindAsync(id, true);
+        if (entity is null) return false;
+        
+        if (entity.User != userId) return false; // Return false for security
+        
+        await _repository.RestoreAsync(entity);
+        return true;
     }
 }

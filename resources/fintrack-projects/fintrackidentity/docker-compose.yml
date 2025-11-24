@@ -23,6 +23,7 @@ services:
       - keycloakdb
     ports:
       - 8080:8080
+      - 9000:9000
 
   keycloakdb:
     image: postgres:15

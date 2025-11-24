@@ -48,11 +48,6 @@ namespace FinTrack.Database.Configuration
             .HasDefaultValueSql("now()")
                    .HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc))
             .IsRequired();
-
-            builder
-            .Property(x => x.OperationType)
-            .HasColumnName("operation_type")
-            .IsRequired();
         }
     }
 }

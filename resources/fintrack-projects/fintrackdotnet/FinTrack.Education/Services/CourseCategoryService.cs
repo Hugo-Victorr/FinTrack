@@ -1,17 +1,18 @@
 using AutoMapper;
 using FinTrack.Database.EFDao;
 using FinTrack.Database.Interfaces;
+using FinTrack.Education.Contracts;
 using FinTrack.Education.DTOs;
 using FinTrack.Model.Entities;
 
 namespace FinTrack.Education.Services;
 
-public class CourseCategoryService(ICourseCategoryRepository repository, IMapper mapper)
+public class CourseCategoryService(ICourseCategoryRepository repository, IMapper mapper) : ICourseCategoryService
 {
-    public async Task<IEnumerable<CourseCategoryDto>> GetAllAsync(QueryOptions opts)
+    public async Task<List<CourseCategoryDto>> GetAllAsync(QueryOptions opts)
     {
         var entities = await repository.AllAsync(opts, false);
-        return mapper.Map<IEnumerable<CourseCategoryDto>>(entities);
+        return mapper.Map<List<CourseCategoryDto>>(entities);
     }
 
     public async Task<CourseCategoryDto?> GetByIdAsync(Guid id)

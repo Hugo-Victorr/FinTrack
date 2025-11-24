@@ -22,7 +22,7 @@ export const CreateCourse: React.FC<CourseFormProps> = ({
   return (
     <Drawer {...drawerProps}>
       <Create saveButtonProps={saveButtonProps}>
-        <Form {...formProps} layout="vertical">
+        <Form {...formProps} layout="vertical" autoComplete="off">
           <Form.Item
             label="Title"
             name="title"
@@ -36,7 +36,6 @@ export const CreateCourse: React.FC<CourseFormProps> = ({
           </Form.Item>
           <Form.Item
             label="Category"
-
             name={"categoryId"}
             rules={[
               {
@@ -44,33 +43,18 @@ export const CreateCourse: React.FC<CourseFormProps> = ({
               },
             ]}
           >
-            <Select
-              placeholder="Select a category"
-              {...selectProps}
-            />
+            <Select placeholder="Select a category" {...selectProps} />
           </Form.Item>
-          <Form.Item
-            label="Description"
-            name="description"
-          >
+          <Form.Item label="Description" name="description">
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Aims"
-            name="aims"
-          >
+          <Form.Item label="Aims" name="aims">
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Instructor"
-            name="instructor"
-          >
+          <Form.Item label="Instructor" name="instructor">
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Level"
-            name="level"
-          >
+          <Form.Item label="Level" name="level">
             <CourseLevelSelect />
           </Form.Item>
         </Form>

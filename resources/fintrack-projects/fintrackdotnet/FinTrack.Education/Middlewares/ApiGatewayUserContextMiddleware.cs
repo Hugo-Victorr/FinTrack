@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FinTrack.Education.Middlewares;
 
@@ -15,7 +16,8 @@ public class ApiGatewayUserContextMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (IsHealthCheckPath(context.Request.Path.ToString()))
+        var endpoint = context.GetEndpoint();
+        if (endpoint?.Metadata.GetMetadata<IAllowAnonymous>() != null)
         {
             await _next(context);
             return;

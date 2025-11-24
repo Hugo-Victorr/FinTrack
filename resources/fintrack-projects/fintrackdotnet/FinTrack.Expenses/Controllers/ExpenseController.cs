@@ -1,70 +1,62 @@
-﻿using FinTrack.Expenses.Contracts;
-using FinTrack.Model.DTO;
+﻿using System.Security.Claims;
+using FinTrack.Database.EFDao;
+using FinTrack.Expenses.DTOs;
+using FinTrack.Expenses.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FinTrack.Expenses.Controllers
+namespace FinTrack.Expenses.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class ExpenseController(ExpenseService _expenseService) : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class ExpenseController(IExpenseService expenseService) : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] QueryOptions opts)
     {
-        private readonly IExpenseService _expenseService = expenseService;
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _expenseService.GetAllAsync(opts, userId);
+        return Ok(result);
+    }
 
-        [HttpGet("health")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        public IActionResult Health() => Ok("Expense Service is running...");
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _expenseService.GetByIdAsync(id, userId);
+        return result is null ? NotFound() : Ok(result);
+    }
 
-        [HttpGet]
-        [ProducesResponseType(typeof(List<ExpenseDTO>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllExpensesAsync()
-        {
-            List<ExpenseDTO> expenses = await _expenseService.AllAsync();
-            return Ok(expenses);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] ExpenseCreateDto dto)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _expenseService.CreateAsync(dto, userId);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-        [HttpGet("{id:guid}")]
-        [ProducesResponseType(typeof(ExpenseDTO), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetByIdAsync(Guid id)
-        {
-            ExpenseDTO? expense = await _expenseService.GetByIdAsync(id);
-            return expense == null ? NotFound() : Ok(expense);
-        }
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] ExpenseUpdateDto dto)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _expenseService.UpdateAsync(id, dto, userId);
+        return result is null ? NotFound() : Ok();
+    }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(ExpenseDTO), StatusCodes.Status201Created)]
-        public async Task<IActionResult> CreateAsync([FromBody] ExpenseDTO dto)
-        {
-            ExpenseDTO created = await _expenseService.CreateAsync(dto);
-            return Ok(created);
-            //return CreatedAtAction(nameof(GetByIdAsync), new { id = created.Id }, created);
-        }
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var success = await _expenseService.DeleteAsync(id, userId);
+        return success ? NoContent() : NotFound();
+    }
 
-        [HttpPut("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] ExpenseDTO dto)
-        {
-            bool ok = await _expenseService.UpdateAsync(id, dto);
-            return ok ? NoContent() : NotFound();
-        }
-
-        [HttpDelete("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteAsync(Guid id)
-        {
-            bool ok = await _expenseService.DeleteAsync(id);
-            return ok ? NoContent() : NotFound();
-        }
-
-        [HttpPost("{id:guid}/restore")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> RestoreAsync(Guid id)
-        {
-            bool ok = await _expenseService.RestoreAsync(id);
-            return ok ? NoContent() : NotFound();
-        }
+    [HttpPost("{id:guid}/restore")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var success = await _expenseService.RestoreAsync(id, userId);
+        return success ? NoContent() : NotFound();
     }
 }

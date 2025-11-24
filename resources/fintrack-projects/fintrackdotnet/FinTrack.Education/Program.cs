@@ -32,6 +32,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register health check
+builder.Services.AddHealthChecks();
+
+// Register database context
 builder.Services.AddDbContext<FintrackDbContext>(options =>
 {
     _ = options.UseNpgsql(builder.Configuration.GetConnectionString("FintrackDb"));
@@ -44,7 +48,7 @@ builder.Services.Configure<AwsStorageSettings>(builder.Configuration.GetSection(
 
 // Register clients
 builder.Services.AddSingleton<IAmazonS3>(_ =>
-        new AmazonS3Client(RegionEndpoint.GetBySystemName(config["AWS:Region"])));
+    new AmazonS3Client(RegionEndpoint.GetBySystemName(config["AWS:Region"])));
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
@@ -103,10 +107,12 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("DevCors");
 
+
 app.UseMiddleware<ApiGatewayUserContextMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

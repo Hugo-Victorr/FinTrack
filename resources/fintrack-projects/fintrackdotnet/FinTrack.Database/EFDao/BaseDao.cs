@@ -81,17 +81,60 @@ namespace FinTrack.Database.EFDao
                     PropertyInfo? prop = typeof(TEntity).GetProperty(key, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
                     if (prop is not null)
                     {
-                        // Build expression: e => EF.Functions.Like(e.Property, "%value%")
                         var parameter = Expression.Parameter(typeof(TEntity), "e");
                         var property = Expression.Property(parameter, prop);
-                        var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
-                            nameof(DbFunctionsExtensions.Like),
-                            new[] { typeof(DbFunctions), typeof(string), typeof(string) }
-                        )!;
-                        var functions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
-                        var pattern = Expression.Constant($"%{value}%");
-                        var like = Expression.Call(likeMethod, functions, property, pattern);
-                        var lambda = Expression.Lambda<Func<TEntity, bool>>(like, parameter);
+                        Expression filterExpression;
+
+                        // Use Like for string properties, equality for others
+                        if (prop.PropertyType == typeof(string))
+                        {
+                            // Build expression: e => EF.Functions.Like(e.Property, "%value%")
+                            var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
+                                nameof(DbFunctionsExtensions.Like),
+                                new[] { typeof(DbFunctions), typeof(string), typeof(string) }
+                            )!;
+                            var functions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
+                            var pattern = Expression.Constant($"%{value}%");
+                            filterExpression = Expression.Call(likeMethod, functions, property, pattern);
+                        }
+                        else
+                        {
+                            // For non-string types, use equality comparison
+                            object? convertedValue = null;
+                            try
+                            {
+                                // Try to convert the string value to the property type
+                                if (prop.PropertyType == typeof(Guid))
+                                {
+                                    convertedValue = Guid.Parse(value);
+                                }
+                                else if (prop.PropertyType.IsEnum)
+                                {
+                                    convertedValue = Enum.Parse(prop.PropertyType, value, true);
+                                }
+                                else
+                                {
+                                    convertedValue = Convert.ChangeType(value, prop.PropertyType);
+                                }
+                            }
+                            catch
+                            {
+                                // If conversion fails, skip this filter
+                                continue;
+                            }
+
+                            if (convertedValue != null)
+                            {
+                                var constant = Expression.Constant(convertedValue, prop.PropertyType);
+                                filterExpression = Expression.Equal(property, constant);
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+
+                        var lambda = Expression.Lambda<Func<TEntity, bool>>(filterExpression, parameter);
                         query = query.Where(lambda);
                     }
                 }
@@ -165,11 +208,6 @@ namespace FinTrack.Database.EFDao
             bool track = false,
             params Expression<Func<TEntity, object>>[] includes)
         {
-            //DbSet<TEntity> dbSet = _context.Set<TEntity>();
-            //IQueryable<TEntity> query = dbSet.Where(p => p.Id.Equals(key));
-            //if (!track)
-            //    query = query.AsNoTracking();
-
             TEntity? entity = null;
 
             //if (key != null && _cache != null && !track)

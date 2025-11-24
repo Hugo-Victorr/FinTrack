@@ -406,10 +406,6 @@ namespace FinTrack.Database.Migrations
                         .HasColumnName("expense_date")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<int>("OperationType")
-                        .HasColumnType("integer")
-                        .HasColumnName("operation_type");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("updated_at");
@@ -465,6 +461,10 @@ namespace FinTrack.Database.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
+
+                    b.Property<int>("OperationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("operation_type");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")

@@ -12,17 +12,31 @@ export interface CurrencyOption {
 }
 
 // ---- KPI Cards ----
-export interface KpiCard {
-  title: string;
+export interface ConsolidatedBalanceKpi {
   value: number;
-  prefix?: string;
-  suffix?: string;
-  subtitle?: string;
-  tag?: {
-    color: string;
-    label: string;
-  };
-  decimals?: number;
+  balanceChange: number;
+}
+
+export interface TopIncomeItem {
+  category: string;
+  categoryColor: string;
+  percentage: number;
+}
+
+export interface TotalIncomeKpi {
+  value: number;
+  incomePercentage: number;
+  topIncomes: TopIncomeItem[];
+}
+
+export interface TotalExpensesKpi {
+  value: number;
+  expenseChange: number;
+}
+
+export interface IncomeExpenseDeviationKpi {
+  value: number;
+  monthlyBalance: number;
 }
 
 // ---- Chart ----
@@ -44,7 +58,18 @@ export interface WalletItem {
 export interface TransactionItem {
   date: string;
   category: string;
+  categoryColor: string;
   description: string;
   value: number;
   wallet: string;
+}
+
+export interface DashboardResponse {
+  consolidatedBalance: ConsolidatedBalanceKpi;
+  totalIncome: TotalIncomeKpi;
+  totalExpenses: TotalExpensesKpi;
+  incomeExpenseDeviation: IncomeExpenseDeviationKpi;
+  weeklyData: WeeklyFinancePoint[];
+  wallets: WalletItem[];
+  recentTransactions: TransactionItem[];
 }
