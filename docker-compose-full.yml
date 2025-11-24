@@ -38,24 +38,24 @@ services:
       retries: 3
       start_period: 40s
 
-  # fintrack-education:
-  #   image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME:-hugovictor}/fintrack-education:${IMAGE_TAG:-latest}
-  #   container_name: fintrack-education
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-  #     ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=${DB_NAME:-fintrackDb};User Id=${DB_USER:-fintrack};Password=${DB_PASSWORD:-fintrack};"
-  #   ports:
-  #     - "8002:8080"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
+  fintrack-education:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME:-hugovictor}/fintrack-education:${IMAGE_TAG:-latest}
+    container_name: fintrack-education
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=${DB_NAME:-fintrackDb};User Id=${DB_USER:-fintrack};Password=${DB_PASSWORD:-fintrack};"
+    ports:
+      - "8002:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   openfinance-api:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME:-hugovictor}/openfinance-api:${IMAGE_TAG:-latest}

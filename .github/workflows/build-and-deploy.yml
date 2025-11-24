@@ -23,9 +23,11 @@ jobs:
           - name: fintrack-expenses
             dockerfile: dockerfiles/fintrack-expenses.dockerfile
             context: ./
-          # - name: fintrack-education
-          #   dockerfile: dockerfiles/fintrack-education.dockerfile
-          #   context: ./resources/fintrack-projects/fintrackdotnet
+
+          - name: fintrack-education
+            dockerfile: dockerfiles/fintrack-education.dockerfile
+            context: ./
+
           - name: openfinance-api
             dockerfile: dockerfiles/openfinance.dockerfile
             context: ./
