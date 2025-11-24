@@ -15,6 +15,12 @@ public class ApiGatewayUserContextMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        if (IsHealthCheckPath(context.Request.Path.ToString()))
+        {
+            await _next(context);
+            return;
+        }
+
         var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
         var roles = context.Request.Headers["X-User-Roles"].FirstOrDefault()?.Split(',') ?? Array.Empty<string>();
 
@@ -38,5 +44,12 @@ public class ApiGatewayUserContextMiddleware
         context.User = new ClaimsPrincipal(identity);
 
         await _next(context);
+    }
+
+    private bool IsHealthCheckPath(string path)
+    {
+        return
+            !string.IsNullOrEmpty(path)
+            && path.Contains("/health", StringComparison.OrdinalIgnoreCase);
     }
 }

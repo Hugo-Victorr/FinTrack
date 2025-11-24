@@ -14,7 +14,7 @@ namespace FinTrack.Education.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetHealthStatus()
         {
-            return Ok(new { status = "API is running smoothly." });
+            return Ok(new { status = "API EDUCATION is running smoothly." });
         }
     }
 }
