@@ -1,7 +1,7 @@
 import { keycloak } from "../auth-provider/utils/keycloak";
 
-export type Resource = "course" | "coursecategory";
-export type Action = "list" | "edit" | "delete" | "create";
+export type Resource = "dashboard" | "course" | "coursecategory" | "expensecategory" | "expense" | "wallet";
+export type Action = "list" | "show" | "edit" | "delete" | "create";
 
 export type Role = "admin" | "manager" | "user";
 
@@ -15,7 +15,12 @@ export const permissionRules: ResourcePermissionMap = {
   "*": {
     "*": ["admin"], // global rule: admin can do everything
   },
+  dashboard: {
+    list: ["user"],
+  },
   course: {
+    list: ["user", "admin", "manager"],
+    show: ["user","admin", "manager"],
     create: ["admin", "manager"],
     edit: ["admin", "manager"],
     delete: ["admin", "manager"],
@@ -25,6 +30,22 @@ export const permissionRules: ResourcePermissionMap = {
     create: ["admin", "manager"],
     edit: ["admin", "manager"],
     delete: ["admin", "manager"],
+  },
+  expensecategory: {
+    list: ["user"],
+    create: ["user"],
+    edit: ["user"],
+    delete: ["user"],
+  },
+  expense: {
+    list: ["user"],
+    create: ["user"],
+  },
+  wallet: {
+    list: ["user"],
+    create: ["user"],
+    edit: ["user"],
+    delete: ["user"],
   },
 };
 

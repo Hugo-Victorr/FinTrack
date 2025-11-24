@@ -12,6 +12,10 @@
   background-blend-mode: multiply,multiply;
 }
 
+.ant-card-body {
+  overflow-x: auto; /* Adds vertical scrollbar if content overflows */
+}
+
 @keyframes inAnimation {
   0% {
     opacity: 0;
