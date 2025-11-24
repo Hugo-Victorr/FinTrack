@@ -115,5 +115,4 @@ services:
 
 volumes:
   fintrack_pg_data:
-    driver: local
   keycloak_pg_data:
