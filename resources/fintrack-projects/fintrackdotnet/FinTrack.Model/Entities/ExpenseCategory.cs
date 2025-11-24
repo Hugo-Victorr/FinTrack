@@ -1,4 +1,5 @@
 using FinTrack.Model.DTO;
+using FinTrack.Model.Enums;
 
 namespace FinTrack.Model.Entities
 {
@@ -6,6 +7,7 @@ namespace FinTrack.Model.Entities
     {
         public string Description { get; set; } = string.Empty;
         public string Color { get; set; } = "#FFFFFF"; // Default color white
+        public OperationType OperationType { get; set; }
 
         public ExpenseCategory(string description, string color) : base()
         {
@@ -26,7 +28,6 @@ namespace FinTrack.Model.Entities
             Color = dto.Color;
             CreatedAt = dto.CreatedAt;
             UpdatedAt = dto.UpdatedAt;
-            User = dto.User;
         }
     }
 }

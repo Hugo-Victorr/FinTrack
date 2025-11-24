@@ -1,66 +1,62 @@
-using FinTrack.Expenses.Contracts;
-using FinTrack.Model.DTO;
+using System.Security.Claims;
+using FinTrack.Database.EFDao;
+using FinTrack.Expenses.DTOs;
+using FinTrack.Expenses.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FinTrack.Expenses.Controllers
+namespace FinTrack.Expenses.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class WalletController(WalletService _service) : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WalletController(IWalletService service) : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] QueryOptions opts)
     {
-        private readonly IWalletService _service = service;
+        Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _service.GetAllAsync(opts, userId);
+        return Ok(result);
+    }
 
-        [HttpGet]
-        [ProducesResponseType(typeof(List<WalletDTO>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllAsync()
-        {
-            var items = await _service.AllAsync();
-            return Ok(items);
-        }
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _service.GetByIdAsync(id, userId);
+        return result is null ? NotFound() : Ok(result);
+    }
 
-        [HttpGet("{id:guid}")]
-        [ProducesResponseType(typeof(WalletDTO), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetByIdAsync(Guid id)
-        {
-            var item = await _service.GetByIdAsync(id);
-            return item == null ? NotFound() : Ok(item);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] WalletCreateDto dto)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _service.CreateAsync(dto, userId);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(WalletDTO), StatusCodes.Status201Created)]
-        public async Task<IActionResult> CreateAsync([FromBody] WalletDTO dto)
-        {
-            var created = await _service.CreateAsync(dto);
-            return Ok(created);
-            //return CreatedAtAction(nameof(GetByIdAsync), "Wallet", new { id = created.Id }, created);
-        }
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] WalletUpdateDto dto)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var result = await _service.UpdateAsync(id, dto, userId);
+        return result is null ? NotFound() : Ok();
+    }
 
-        [HttpPut("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] WalletDTO dto)
-        {
-            var ok = await _service.UpdateAsync(id, dto);
-            return ok ? NoContent() : NotFound();
-        }
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var success = await _service.DeleteAsync(id, userId);
+        return success ? NoContent() : NotFound();
+    }
 
-        [HttpDelete("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteAsync(Guid id)
-        {
-            var ok = await _service.DeleteAsync(id);
-            return ok ? NoContent() : NotFound();
-        }
-
-        [HttpPost("{id:guid}/restore")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> RestoreAsync(Guid id)
-        {
-            var ok = await _service.RestoreAsync(id);
-            return ok ? NoContent() : NotFound();
-        }
+    [HttpPost("{id:guid}/restore")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        _ = Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, out Guid userId);
+        var success = await _service.RestoreAsync(id, userId);
+        return success ? NoContent() : NotFound();
     }
 }

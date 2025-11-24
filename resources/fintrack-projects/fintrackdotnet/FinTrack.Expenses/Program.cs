@@ -1,8 +1,7 @@
 using FinTrack.Database;
-using FinTrack.Database.Contracts;
-using FinTrack.Database.EFDao;
+using FinTrack.Database.Interfaces;
 using FinTrack.Database.Migrations;
-using FinTrack.Expenses.Contracts;
+using FinTrack.Expenses.Middlewares;
 using FinTrack.Expenses.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -11,11 +10,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+    {
+        policy.AllowAnyOrigin()   // TODO: disable "allow any" in production
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register health check
+builder.Services.AddHealthChecks();
+
+// Register database context
 builder.Services.AddDbContext<FintrackDbContext>(options =>
 {
     _ = options.UseNpgsql(builder.Configuration.GetConnectionString("FintrackDb"));
@@ -23,15 +37,18 @@ builder.Services.AddDbContext<FintrackDbContext>(options =>
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddTransient<IStartupFilter, MigrationStartupFilter<FintrackDbContext>>();
 
-// Services
-builder.Services.AddTransient<IExpenseService, ExpenseService>();
-builder.Services.AddTransient<IExpenseCategoryService, ExpenseCategoryService>();
-builder.Services.AddTransient<IWalletService, WalletService>();
+// Register AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
 
-// Repository Services
-builder.Services.AddTransient<IExpenseDao, ExpenseDao>();
-builder.Services.AddTransient<IExpenseCategoryDao, ExpenseCategoryDao>();
-builder.Services.AddTransient<IWalletDao, WalletDao>();
+// Register Repositories
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+builder.Services.AddScoped<IExpenseCategoryRepository, ExpenseCategoryRepository>();
+builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+
+// Register Services
+builder.Services.AddScoped<ExpenseService>();
+builder.Services.AddScoped<ExpenseCategoryService>();
+builder.Services.AddScoped<WalletService>();
 
 var app = builder.Build();
 
@@ -65,9 +82,13 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = string.IsNullOrEmpty(basePath) ? "swagger" : $"{basePath}/swagger";
     });
 }
+app.UseCors("DevCors");
 
+app.UseMiddleware<ApiGatewayUserContextMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

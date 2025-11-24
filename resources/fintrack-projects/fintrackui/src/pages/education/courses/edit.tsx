@@ -1,4 +1,4 @@
-import { Edit, getValueFromEvent, useForm, useSelect } from "@refinedev/antd";
+import { Edit, useForm, useSelect } from "@refinedev/antd";
 import {
   Button,
   Card,
@@ -12,9 +12,9 @@ import {
   Tabs,
 } from "antd";
 import { CourseLevelSelect } from "../../../components/course/levelSelect";
-import { useApiUrl, useCustom, useOne, useParsed } from "@refinedev/core";
+import { useApiUrl, useParsed } from "@refinedev/core";
 
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -23,23 +23,24 @@ import {
   InboxOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import type { UploadProps } from "antd";
+import type { UploadFile } from "antd";
 import { message, Upload } from "antd";
-import axios from "axios";
 import { axiosInstance } from "../../../providers/rest-data-provider/utils";
 
 const { Dragger } = Upload;
 
 export const EditCourse = () => {
-  const [presignedUrl, setPresignedUrl] = useState();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const apiUrl = useApiUrl();
   const { id, resource } = useParsed();
+
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | undefined>();
 
   const {
     form,
     formProps,
     saveButtonProps,
-    query: { isLoading: courseIsLoading, data },
+    query,
   } = useForm({
     autoSave: {
       enabled: true,
@@ -52,24 +53,15 @@ export const EditCourse = () => {
     },
   });
 
-  const props: UploadProps = {
-    name: "file",
-    action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
-    headers: {
-      authorization: "authorization-text",
-    },
-    onChange(info) {
-      if (info.file.status !== "uploading") {
-        console.log(info.file, info.fileList);
-      }
-      if (info.file.status === "done") {
-        message.success(`${info.file.name} file uploaded successfully`);
-      } else if (info.file.status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
+  const obtainDownloadUrl = async (key: string) => {
+    try {
+      const res = await axiosInstance.get(`${apiUrl}/course/play?key=${encodeURIComponent(key)}`).then((response) => response.data?.url);
+      return res;
+    } catch (error) {
+      console.error("Failed to obtain download URL:", error);
+      return undefined;
+    }
   };
-
 
   const obtainUploadUrl = async (key: string) => {
     const res = await axiosInstance.post(`${apiUrl}/${resource?.name}/upload`, {
@@ -79,26 +71,127 @@ export const EditCourse = () => {
     return res;
   };
 
-  const {
-    category,
-    query: { isLoading: catIsLoading, data: catData },
-  } = useOne({
-    resource: "coursecategory",
-    id: data?.data?.category?.id,
-  });
-
-  const { selectProps } = useSelect({
+  const { selectProps, query: { isLoading: catIsLoading } } = useSelect({
     resource: "coursecategory",
     optionLabel: "name",
   });
 
-  // const uploadThumbnail = (filename) => {
+  const courseIsLoading = query?.isLoading ?? false;
+  const courseData = query?.data;
+  const cat = courseData?.data?.category;
+  const thumbnailKey = `${id}/thumbnail`;
 
-  //   onFinishAutoSave({
-  //                 ...values,
-  //                 info.file.name
-  //               });
-  // }
+  // Generic upload handler for both thumbnails and videos
+  const handleUpload = async (
+    file: File,
+    key: string,
+    options?: {
+      onSuccess?: (downloadUrl: string, key: string) => void;
+      onError?: (error: Error) => void;
+      successMessage?: string;
+      errorMessage?: string;
+    }
+  ): Promise<boolean> => {
+    try {
+      // Get presigned upload URL
+      const uploadUrl = await obtainUploadUrl(key);
+      
+      // Upload file to S3
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      // Get presigned download URL
+      const downloadUrl = await obtainDownloadUrl(key);
+      
+      if (!downloadUrl) {
+        throw new Error("Failed to get download URL");
+      }
+
+      // Call success callback if provided
+      if (options?.onSuccess) {
+        options.onSuccess(downloadUrl, key);
+      }
+
+      // Show success message
+      message.success(options?.successMessage || "File uploaded successfully");
+      return false; // Prevent default upload behavior
+    } catch (error) {
+      console.error("Upload error:", error);
+      const errorMsg = error instanceof Error ? error : new Error("Upload failed");
+      
+      // Call error callback if provided
+      if (options?.onError) {
+        options.onError(errorMsg);
+      }
+
+      // Show error message
+      message.error(options?.errorMessage || "Failed to upload file");
+      return false;
+    }
+  };
+
+  // Thumbnail upload handler
+  const handleThumbnailUpload = async (file: File) => {
+    return handleUpload(file, thumbnailKey, {
+      onSuccess: (downloadUrl) => {
+        setThumbnailUrl(downloadUrl);
+        setFileList([{ uid: "thumbnail", url: downloadUrl, name: thumbnailKey, status: "done" }]);
+      },
+      successMessage: "Thumbnail uploaded successfully",
+      errorMessage: "Failed to upload thumbnail",
+    });
+  };
+
+  // Video upload handler - creates a handler for a specific lesson
+  // Automatically generates a unique key in frontend and stores only the key (not URL) in the form
+  // Signed URLs are fetched on-demand when needed for playback (in watch.tsx)
+  const createVideoUploadHandler = (moduleIndex: number, lessonIndex: number) => {
+    return async (file: File) => {
+      // Get file extension
+      const fileExtension = file.name.split('.').pop() || 'mp4';
+
+      console.log(moduleIndex, lessonIndex);
+      
+      const videoKey = `${id}/videos/${moduleIndex}/${lessonIndex}.${fileExtension}`;
+      
+      // Upload file to S3 using the generated unique key
+      return handleUpload(file, videoKey, {
+        onSuccess: (_downloadUrl, key) => {
+          // Store only the key in the form field (not the signed download URL)
+          // The backend will store this key, and signed URLs are fetched on-demand
+          // when needed for video playback (see watch.tsx)
+          const modules = form?.getFieldValue("modules") || [];
+          if (modules[moduleIndex]?.lessons?.[lessonIndex]) {
+            modules[moduleIndex].lessons[lessonIndex].videoUrl = key;
+            form?.setFieldsValue({ modules });
+          }
+        },
+        successMessage: "Video uploaded successfully",
+        errorMessage: "Failed to upload video",
+      });
+    };
+  };
+
+  // Fetch thumbnail on mount
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchThumbnailUrl = async () => {
+      const downloadUrl = await obtainDownloadUrl(thumbnailKey);
+      if (downloadUrl) {
+        setThumbnailUrl(downloadUrl);
+        setFileList([{ uid: "thumbnail", url: downloadUrl, name: thumbnailKey, status: "done" }]);
+      }
+    };
+    
+    fetchThumbnailUrl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   return (
     <Edit
@@ -127,7 +220,7 @@ export const EditCourse = () => {
                     </Form.Item>
                     <Form.Item
                       label="Category"
-                      initialValue={catData?.data.id}
+                      initialValue={cat?.id}
                       name={"categoryId"}
                       rules={[
                         {
@@ -150,45 +243,49 @@ export const EditCourse = () => {
                       <Input />
                     </Form.Item>
                     <Form.Item label="Level" name="level">
-                      <CourseLevelSelect />
+                      <CourseLevelSelect initialValue={courseData?.data?.level ?? 0} />
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={24} md={12}>
                     <Form.Item
-                      label="Thumbnail"
+                      label="Thumbnail"                      
                     >
                       <Dragger
-                        name={"file"}
+                        name="file"
                         multiple={false}
-                        listType="picture"
                         maxCount={1}
-                        beforeUpload={async () => {
-                          const url = await obtainUploadUrl("thumbnail.png");
-                          console.log(url)
-
-                          form.setFieldValue("thumbnailUrl", url);
-                          
-
-                          return false;
+                        fileList={fileList}
+                        beforeUpload={handleThumbnailUpload}
+                        onRemove={() => {
+                          setFileList([]);
+                          setThumbnailUrl(undefined);
+                          return true;
                         }}
                         onChange={(info) => {
-                          const { status } = info.file;
-                          if (status !== "uploading") {
-                            console.log(info.file, info.fileList);
-                          }
-                          if (status === "error") {
+                          setFileList(info.fileList);
+                          if (info.file.status === "error") {
                             message.error(
                               `${info.file.name} file upload failed.`
                             );
                           }
                         }}
+                        accept="image/*"
                       >
-                        <p className="ant-upload-drag-icon">
-                          <InboxOutlined />
-                        </p>
-                        <p className="ant-upload-text">
-                          Click or drag file to this area to upload
-                        </p>
+                        {fileList.length > 0 ? (
+                          <img src={thumbnailUrl} alt="Thumbnail" style={{ maxWidth: 100, height: "auto", objectFit: "contain" }} />
+                        ) : (
+                        <>
+                          <p className="ant-upload-drag-icon">
+                            <InboxOutlined />
+                          </p>
+                          <p className="ant-upload-text">
+                            Click or drag file to this area to upload
+                          </p>
+                          <p className="ant-upload-hint">
+                            Support for a single image upload
+                          </p>
+                        </>
+                        )}
                       </Dragger>
                     </Form.Item>
                     <Form.Item label="Is Published?" name="isPublished">
@@ -247,28 +344,49 @@ export const EditCourse = () => {
                                     rowGap: 16,
                                   }}
                                 >
-                                  {subFields.map((subField) => (
-                                    <Space key={subField.key}>
-                                      <Form.Item
-                                        noStyle
-                                        name={[subField.name, "title"]}
-                                      >
-                                        <Input placeholder="Title" />
-                                      </Form.Item>
-                                      <Upload {...props}>
-                                        <Button icon={<UploadOutlined />}>
-                                          Click to Upload
-                                        </Button>
-                                      </Upload>
-                                      <ArrowUpOutlined />
-                                      <ArrowDownOutlined />
-                                      <CloseOutlined
-                                        onClick={() => {
-                                          subOpt.remove(subField.name);
-                                        }}
-                                      />
-                                    </Space>
-                                  ))}
+                                  {subFields.map((subField) => {
+                                    // Get current lesson data to check if video is uploaded
+                                    const hasVideo = false;
+                                    
+                                    return (
+                                      <Space key={subField.key} style={{ width: "100%" }} wrap>
+                                        <Form.Item
+                                          noStyle
+                                          name={[subField.name, "title"]}
+                                        >
+                                          <Input placeholder="Lesson Title" style={{ minWidth: 200 }} />
+                                        </Form.Item>
+                                        <Upload 
+                                          multiple={false}
+                                          maxCount={1}
+                                          name="file"
+                                          listType="text"
+                                          accept="video/*"
+                                          showUploadList={false}
+                                          beforeUpload={createVideoUploadHandler(field.key, subField.key)}
+                                        >
+                                          <Button 
+                                            icon={<UploadOutlined />}
+                                            type={hasVideo ? "default" : "primary"}
+                                          >
+                                            {hasVideo ? "Change Video" : "Upload Video"}
+                                          </Button>
+                                        </Upload>
+                                        {hasVideo && (
+                                          <span style={{ color: "#52c41a", fontSize: "12px" }}>
+                                            ✓ Video uploaded
+                                          </span>
+                                        )}
+                                        <ArrowUpOutlined />
+                                        <ArrowDownOutlined />
+                                        <CloseOutlined
+                                          onClick={() => {
+                                            subOpt.remove(subField.name);
+                                          }}
+                                        />
+                                      </Space>
+                                    );
+                                  })}
                                   <Button
                                     type="dashed"
                                     onClick={() => subOpt.add()}

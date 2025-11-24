@@ -9,7 +9,6 @@ namespace FinTrack.Model.DTO
         public Guid Id { get; set; } = Guid.NewGuid();
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToLocalTime();
         public DateTime? UpdatedAt { get; set; }
-        public Guid User { get; set; }
 
         public ExpenseCategoryDTO() { }
 
@@ -20,7 +19,6 @@ namespace FinTrack.Model.DTO
             Color = category.Color;
             CreatedAt = category.CreatedAt;
             UpdatedAt = category.UpdatedAt;
-            User = category.User;
         }
 
         public ExpenseCategory ToExpenseCategory() => new(Description, Color)
@@ -30,7 +28,6 @@ namespace FinTrack.Model.DTO
             Color = Color,
             CreatedAt = CreatedAt,
             UpdatedAt = UpdatedAt,
-            User = User
         };
     }
 }

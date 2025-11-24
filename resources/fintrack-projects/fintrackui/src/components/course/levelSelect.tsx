@@ -1,8 +1,8 @@
 import { Select } from "antd"
 
-export const CourseLevelSelect = () => {
+export const CourseLevelSelect = ( props: { initialValue: number } ) => {
   return (
-    <Select options={[
+    <Select defaultValue={props.initialValue} options={[
       {
         value: 0,
         label: "Beginner"

@@ -19,6 +19,11 @@ namespace FinTrack.Database.Configuration
             .Property(x => x.Color)
             .HasColumnName("color")
             .IsRequired();
+
+            builder
+            .Property(x => x.OperationType)
+            .HasColumnName("operation_type")
+            .IsRequired();
         }
     }
 }
