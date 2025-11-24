@@ -18,9 +18,11 @@ public class EducationProfile : Profile
         CreateMap<CourseUpdateDto, Course>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
-        CreateMap<CourseContentDto, CourseModule>();
-        CreateMap<CourseContentDto, CourseLesson>();
-
+        CreateMap<CourseContentDto, CourseModule>()
+            .ForMember(dest => dest.OrderIndex, opt => opt.MapFrom(src => src.Order));
+        CreateMap<CourseContentDto, CourseLesson>()
+            .ForMember(dest => dest.Order, opt => opt.MapFrom(src => src.Order));
+            
         CreateMap<CourseCategory, CourseCategoryDto>();
 
         CreateMap<CourseCategoryCreateDto, CourseCategory>();
@@ -30,5 +32,10 @@ public class EducationProfile : Profile
 
         CreateMap<CourseProgressDto, CourseProgress>();
         CreateMap<LessonProgressDto, CourseLessonProgress>();
+        
+        CreateMap<CourseLessonProgress, LessonProgressDto>()
+            .ForMember(dest => dest.LessonId, opt => opt.MapFrom(src => src.LessonId))
+            .ForMember(dest => dest.CurrentTimestamp, opt => opt.MapFrom(src => src.TimeWatchedSeconds))
+            .ForMember(dest => dest.ProgressPercentage, opt => opt.MapFrom(src => (int)Math.Round(src.PercentCompleted * 100)));
     }
 }

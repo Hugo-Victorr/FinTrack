@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FinTrack.Education.Middlewares;
 
@@ -15,6 +16,13 @@ public class ApiGatewayUserContextMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        var endpoint = context.GetEndpoint();
+        if (endpoint?.Metadata.GetMetadata<IAllowAnonymous>() != null)
+        {
+            await _next(context);
+            return;
+        }
+
         var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
         var roles = context.Request.Headers["X-User-Roles"].FirstOrDefault()?.Split(',') ?? Array.Empty<string>();
 
