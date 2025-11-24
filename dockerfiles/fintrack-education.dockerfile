@@ -7,6 +7,7 @@ WORKDIR /src
 COPY ../resources/fintrack-projects/fintrackdotnet/FinTrack.Education/FinTrack.Education.csproj FinTrack.Education/
 COPY ../resources/fintrack-projects/fintrackdotnet/FinTrack.Database/FinTrack.Database.csproj FinTrack.Database/
 COPY ../resources/fintrack-projects/fintrackdotnet/FinTrack.Model/FinTrack.Model.csproj FinTrack.Model/
+COPY ../resources/fintrack-projects/fintrackdotnet/FinTrack.Infrastructure/FinTrack.Infrastructure.csproj FinTrack.Infrastructure/
 
 RUN dotnet restore FinTrack.Education/FinTrack.Education.csproj
 
