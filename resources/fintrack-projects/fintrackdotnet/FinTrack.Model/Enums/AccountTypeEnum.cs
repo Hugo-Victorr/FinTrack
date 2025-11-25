@@ -11,7 +11,7 @@ namespace FinTrack.Model.Enums
         /// Conta Poupança
         /// </summary>
         SVGS = 1,
-        erro
+
         /// <summary>
         /// Conta Salário
         /// </summary>
@@ -20,6 +20,6 @@ namespace FinTrack.Model.Enums
         /// <summary>
         /// Conta de Cartão de Crédito
         /// </summary>
-        CCRD = 3,
+        CCRD = 3
     }
 }
