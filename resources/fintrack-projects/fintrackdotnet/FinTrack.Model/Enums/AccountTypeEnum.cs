@@ -11,7 +11,7 @@ namespace FinTrack.Model.Enums
         /// Conta Poupança
         /// </summary>
         SVGS = 1,
-
+        erro
         /// <summary>
         /// Conta Salário
         /// </summary>

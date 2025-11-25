@@ -1,4 +1,6 @@
-﻿namespace FinTrack.Model.Entities
+﻿using FinTrack.Model.Enums;
+
+namespace FinTrack.Model.Entities
 {
     public class Account : BaseEntity
     {
@@ -17,7 +19,7 @@
         /// Código da moeda referente aos valores monetários da conta, seguindo o padrão ISO 4217.
         /// Exemplo: BRL
         /// </summary>
-        public CurrencyTypeEnum Currency { get; set; }
+        public CurrencyType Currency { get; set; }
 
         /// <summary>
         /// Tipo de conta. Reflete a finalidade da conta.
