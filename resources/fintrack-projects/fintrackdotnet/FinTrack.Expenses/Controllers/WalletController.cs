@@ -1,9 +1,11 @@
-using System.Security.Claims;
 using FinTrack.Database.EFDao;
 using FinTrack.Expenses.DTOs;
 using FinTrack.Expenses.Services;
+using FinTrack.Model.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace FinTrack.Expenses.Controllers;
 
@@ -12,6 +14,40 @@ namespace FinTrack.Expenses.Controllers;
 [Authorize]
 public class WalletController(WalletService _service) : ControllerBase
 {
+    [HttpGet("/accounts/{cpf:string}")]
+    public async Task<IActionResult> GetAccountsByCPF(string cpf)
+    {
+        try
+        {
+            using var client = new HttpClient(); // Ideal: usar IHttpClientFactory
+            var url = $"http://openfinance-api:8080/api/account/cpf/{cpf}";
+            var response = await client.GetAsync(url);
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode, json);
+            }
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var data = JsonSerializer.Deserialize<OpenFinanceCustomerAccountsDto>(json, options);
+
+            if (data is null)
+                return BadRequest("Formato inesperado");
+
+            return Ok(data);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message, inner = ex.InnerException?.Message });
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] QueryOptions opts)
     {
