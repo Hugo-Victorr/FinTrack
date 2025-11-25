@@ -11,7 +11,7 @@ namespace OpenFinance.Model.Mappings
     {
         public MappingProfile()
         {
-            // Account Mappings
+            // Account Mappings (Amount included by convention)
             CreateMap<Account, AccountDto>()
                 .ForMember(dest => dest.FinancialOrganizationId, 
                     opt => opt.MapFrom(src => src.Financial != null ? src.Financial.Id : Guid.Empty))

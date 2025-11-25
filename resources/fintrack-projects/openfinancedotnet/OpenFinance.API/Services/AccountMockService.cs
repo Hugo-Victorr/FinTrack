@@ -38,6 +38,7 @@ namespace OpenFinance.API.Services
                     var accountNumber = (1000000 + accountId).ToString();
                     var branchCode = (random.Next(1, 10000)).ToString("D4");
                     var openingDate = new DateTime(random.Next(2015, 2024), random.Next(1, 13), random.Next(1, 29));
+                    var amount = Math.Round((decimal)(random.NextDouble() * 50000), 2); // até 50k
 
                     accounts.Add(new Account
                     {
@@ -50,6 +51,7 @@ namespace OpenFinance.API.Services
                         Status = randomStatus,
                         OpeningDate = openingDate,
                         Financial = randomFinancialOrg,
+                        Amount = amount,
                         CreatedAt = DateTime.Now.ToLocalTime()
                     });
 

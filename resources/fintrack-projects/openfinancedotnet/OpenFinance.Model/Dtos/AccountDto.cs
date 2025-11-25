@@ -17,5 +17,6 @@ namespace OpenFinance.Model.Dtos
         public string Number { get; set; }
         public AccountStatusEnum Status { get; set; }
         public DateTime OpeningDate { get; set; }
+        public decimal Amount { get; set; }
     }
 }

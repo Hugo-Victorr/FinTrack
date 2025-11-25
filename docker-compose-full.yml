@@ -116,3 +116,4 @@ services:
 volumes:
   fintrack_pg_data:
   keycloak_pg_data:
+    

@@ -50,5 +50,11 @@ namespace OpenFinance.Model.Entities
         /// Exemplo: 2018-01-15
         /// </summary>
         public DateTime OpeningDate { get; set; }
+
+        /// <summary>
+        /// Quantia atual depositada nesta conta na moeda indicada.
+        /// Exemplo: 1523.75
+        /// </summary>
+        public decimal Amount { get; set; }
     }
 }
